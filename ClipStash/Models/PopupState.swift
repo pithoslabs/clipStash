@@ -5,6 +5,7 @@ class PopupState: ObservableObject {
     static let shared = PopupState()
     @Published var selectedIndex = 0
     @Published var searchQuery = ""
+    @Published var hoveredIndex: Int? = nil
 
     var onItemSelected: ((ClipboardItem) -> Void)?
     var onDismiss: (() -> Void)?
@@ -12,5 +13,6 @@ class PopupState: ObservableObject {
     func reset() {
         selectedIndex = 0
         searchQuery = ""
+        hoveredIndex = nil
     }
 }

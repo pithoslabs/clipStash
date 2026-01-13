@@ -68,11 +68,8 @@ struct PopupView: View {
                                     isSelected: index == state.selectedIndex
                                 )
                                 .id(index)
-                                .onTapGesture(count: 2) {
-                                    selectItem(item)
-                                }
-                                .onTapGesture(count: 1) {
-                                    state.selectedIndex = index
+                                .onHover { hovering in
+                                    state.hoveredIndex = hovering ? index : nil
                                 }
                             }
                         }
@@ -119,6 +116,16 @@ struct PopupView: View {
 
     private func selectItem(_ item: ClipboardItem) {
         onItemSelected?(item)
+    }
+
+    func handleMouseDown(_ event: NSEvent) -> Bool {
+        // If mouse is hovering over an item, select it
+        if let hoveredIndex = state.hoveredIndex,
+           hoveredIndex < filteredItems.count {
+            selectItem(filteredItems[hoveredIndex])
+            return true
+        }
+        return false
     }
 
     func handleKeyDown(_ event: NSEvent) -> Bool {

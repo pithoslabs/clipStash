@@ -7,6 +7,11 @@ final class KeyableWindow: NSWindow {
     override var canBecomeMain: Bool { true }
 }
 
+// Custom hosting view that accepts first mouse click immediately
+final class FirstMouseHostingView<Content: View>: NSHostingView<Content> {
+    override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
+}
+
 final class PopupWindowController {
     static let shared = PopupWindowController()
 
@@ -14,6 +19,7 @@ final class PopupWindowController {
     private var popupView: PopupView?
     private var hostingView: NSHostingView<PopupView>?
     private var eventMonitor: Any?
+    private var mouseMonitor: Any?
     private var globalClickMonitor: Any?
     private var previousApp: NSRunningApplication?
 
@@ -59,7 +65,7 @@ final class PopupWindowController {
         )
         popupView = view
 
-        let hostingView = NSHostingView(rootView: view)
+        let hostingView = FirstMouseHostingView(rootView: view)
         self.hostingView = hostingView
 
         let window = KeyableWindow(
@@ -97,6 +103,14 @@ final class PopupWindowController {
             return event
         }
 
+        // Monitor for mouse clicks on items
+        mouseMonitor = NSEvent.addLocalMonitorForEvents(matching: .leftMouseDown) { [weak self] event in
+            if self?.popupView?.handleMouseDown(event) == true {
+                return nil
+            }
+            return event
+        }
+
         // Monitor for clicks outside
         globalClickMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] _ in
             self?.dismiss()
@@ -107,6 +121,11 @@ final class PopupWindowController {
         if let monitor = eventMonitor {
             NSEvent.removeMonitor(monitor)
             eventMonitor = nil
+        }
+
+        if let monitor = mouseMonitor {
+            NSEvent.removeMonitor(monitor)
+            mouseMonitor = nil
         }
 
         if let monitor = globalClickMonitor {
