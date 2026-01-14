@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy — ClipStash</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Fraunces:wght@300;400&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --slate-deep: #4A5568;
+            --slate-blue: #5D6D7E;
+            --slate-mid: #85929E;
+            --cream: #FDFBF7;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--cream);
+            color: var(--slate-deep);
+            line-height: 1.7;
+        }
+        .container {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 4rem 2rem;
+        }
+        h1 {
+            font-family: 'Fraunces', serif;
+            font-size: 2.5rem;
+            font-weight: 300;
+            margin-bottom: 0.5rem;
+        }
+        .updated {
+            color: var(--slate-mid);
+            font-size: 0.9rem;
+            margin-bottom: 3rem;
+        }
+        h2 {
+            font-family: 'Fraunces', serif;
+            font-size: 1.5rem;
+            font-weight: 400;
+            margin-top: 2.5rem;
+            margin-bottom: 1rem;
+            color: var(--slate-blue);
+        }
+        p, ul {
+            margin-bottom: 1rem;
+            color: var(--slate-deep);
+        }
+        ul {
+            padding-left: 1.5rem;
+        }
+        li {
+            margin-bottom: 0.5rem;
+        }
+        strong {
+            font-weight: 600;
+        }
+        a {
+            color: var(--slate-blue);
+        }
+        .back-link {
+            display: inline-block;
+            margin-bottom: 2rem;
+            color: var(--slate-mid);
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+        .back-link:hover {
+            color: var(--slate-blue);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" class="back-link">← Back to ClipStash</a>
+
+        <h1>Privacy Policy</h1>
+        <p class="updated">Last updated: January 2025</p>
+
+        <p>ClipStash is built with privacy as a core principle. We believe your clipboard data is personal and should stay on your device.</p>
+
+        <h2>Data Collection</h2>
+        <p><strong>We do not collect any data.</strong> ClipStash operates entirely on your Mac with no network connections, no analytics, no tracking, and no telemetry.</p>
+
+        <h2>What ClipStash Stores</h2>
+        <p>ClipStash stores your clipboard history locally on your Mac in the following location:</p>
+        <ul>
+            <li><code>~/Library/Application Support/ClipStash/history.json</code></li>
+        </ul>
+        <p>This data:</p>
+        <ul>
+            <li>Never leaves your device</li>
+            <li>Is not synced to any cloud service</li>
+            <li>Is not accessible to us or any third party</li>
+            <li>Is automatically deleted after 24 hours</li>
+            <li>Can be manually cleared at any time</li>
+        </ul>
+
+        <h2>Permissions</h2>
+        <p>ClipStash requires the following macOS permissions to function:</p>
+        <ul>
+            <li><strong>Accessibility:</strong> Required to intercept the Cmd+V keyboard shortcut and simulate paste events. This permission is necessary for the core functionality of showing clipboard history when you paste.</li>
+        </ul>
+        <p>We do not use these permissions to monitor your activity, capture keystrokes, or access any data beyond what's necessary for clipboard management.</p>
+
+        <h2>Third-Party Services</h2>
+        <p>ClipStash does not use any third-party services, SDKs, or analytics tools. The app is completely self-contained.</p>
+
+        <h2>Data Security</h2>
+        <p>Your clipboard history is stored as a plain JSON file on your local filesystem. It is protected by your Mac's standard file system permissions and any full-disk encryption you have enabled (FileVault).</p>
+        <p><strong>Sensitive Data:</strong> Be aware that ClipStash stores text you copy, which may include passwords or sensitive information. We recommend:</p>
+        <ul>
+            <li>Using a password manager that clears clipboard after use</li>
+            <li>Manually clearing ClipStash history after copying sensitive data</li>
+            <li>Relying on the 24-hour auto-cleanup for routine use</li>
+        </ul>
+
+        <h2>Children's Privacy</h2>
+        <p>ClipStash does not collect any personal information from anyone, including children under 13.</p>
+
+        <h2>Changes to This Policy</h2>
+        <p>If we make changes to this privacy policy, we will update the "Last updated" date above. Significant changes will be communicated through the app or our website.</p>
+
+        <h2>Contact</h2>
+        <p>If you have questions about this privacy policy, please contact us at:</p>
+        <ul>
+            <li>GitHub: <a href="https://github.com/pithoslabs/clipStash">github.com/pithoslabs/clipStash</a></li>
+        </ul>
+
+        <h2>Summary</h2>
+        <p><strong>Your data stays on your Mac. We can't see it. We don't want to see it. That's the whole point.</strong></p>
+    </div>
+</body>
+</html>
