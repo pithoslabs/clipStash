@@ -45,3 +45,4 @@ Dependencies/
 .idea/
 *.swp
 *~
+.vercel

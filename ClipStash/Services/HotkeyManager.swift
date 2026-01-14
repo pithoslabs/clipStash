@@ -98,6 +98,24 @@ final class HotkeyManager {
                 return Unmanaged.passRetained(event)
             }
 
+            // Check if clipboard has text content we can handle
+            // If clipboard only has app-specific data (video editors, design tools, etc.), let native paste through
+            let pasteboard = NSPasteboard.general
+            let hasTextContent = pasteboard.string(forType: .string) != nil
+            let hasHistoryItems = !HistoryStore.shared.items.isEmpty
+
+            if !hasTextContent && !hasHistoryItems {
+                print("[HotkeyManager] → No text content and no history, passing through for native paste")
+                return Unmanaged.passRetained(event)
+            }
+
+            if !hasTextContent {
+                // Clipboard has non-text data (e.g., video timeline element)
+                // Let native paste handle it
+                print("[HotkeyManager] → Non-text clipboard content, passing through for native paste")
+                return Unmanaged.passRetained(event)
+            }
+
             print("[HotkeyManager] → User event, showing popup")
             DispatchQueue.main.async { [weak self] in
                 self?.onPasteTriggered?()
