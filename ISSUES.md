@@ -13,6 +13,7 @@ This document details bugs, security issues, and code quality problems identifie
 | #3 | Silent data loss on save failure | Added `@Published saveError`, retry logic (3 attempts), and UI warning in menu bar |
 | #4 | Paste fails when no previous app exists | Always set clipboard content; only auto-paste if target app exists |
 | #8 | Unsynchronized access to history items | Added `@MainActor` to `HistoryStore` class |
+| #16 | No size limit on clipboard content | Limit to 1MB; truncate with size marker if exceeded |
 
 ---
 
@@ -522,7 +523,7 @@ let view = PopupView(
 
 ---
 
-### 16. No Size Limit on Clipboard Content
+### 16. ~~No Size Limit on Clipboard Content~~ ✅ FIXED
 
 **File:** `ClipStash/Services/ClipboardMonitor.swift:38-40`
 
@@ -565,8 +566,8 @@ if content.utf8.count > maxContentSize {
 | Bugs | 4 | #4, #5, #6, #7 | 1 (#4) |
 | Thread Safety | 1 | #8 | 1 (#8) |
 | UX | 4 | #9, #10, #11, #12 | 0 |
-| Code Quality | 4 | #13, #14, #15, #16 | 0 |
-| **Total** | **16** | | **5 fixed** |
+| Code Quality | 4 | #13, #14, #15, #16 | 1 (#16) |
+| **Total** | **16** | | **6 fixed** |
 
 ## Priority Order for Fixes
 
@@ -575,7 +576,7 @@ if content.utf8.count > maxContentSize {
 3. ~~**#3** - Silent data loss (data integrity)~~ ✅ FIXED
 4. ~~**#1** - Plaintext storage (security)~~ ✅ FIXED
 5. ~~**#2** - Race condition in paste (reliability)~~ ✅ FIXED
-6. **#16** - No size limit (memory safety)
+6. ~~**#16** - No size limit (memory safety)~~ ✅ FIXED
 7. **#6** - Blocking main thread (performance)
 8. **#7** - Timer leak (resource management)
 9. **#5** - Wrong source attribution (accuracy)
