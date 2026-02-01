@@ -11,8 +11,14 @@ final class ClipboardMonitor: ObservableObject {
     /// Maximum content size to store (1MB)
     private let maxContentSize = 1_000_000
 
+    /// Track frontmost app to attribute clipboard content correctly
+    /// We store the app that was frontmost *before* detecting a change,
+    /// since the actual copy happened before our polling detected it
+    private var lastKnownFrontmostApp: String?
+
     private init() {
         lastChangeCount = pasteboard.changeCount
+        lastKnownFrontmostApp = NSWorkspace.shared.frontmostApplication?.localizedName
     }
 
     func start() {
@@ -30,29 +36,36 @@ final class ClipboardMonitor: ObservableObject {
 
     private func checkForChanges() {
         let currentCount = pasteboard.changeCount
+        let currentFrontmostApp = NSWorkspace.shared.frontmostApplication?.localizedName
 
-        guard currentCount != lastChangeCount else { return }
-        lastChangeCount = currentCount
+        // Check if clipboard changed
+        if currentCount != lastChangeCount {
+            lastChangeCount = currentCount
 
-        // Get the current frontmost app
-        let sourceApp = NSWorkspace.shared.frontmostApplication?.localizedName
+            // Use the app that was frontmost *before* this check,
+            // as the copy likely happened before we detected the change
+            let sourceApp = lastKnownFrontmostApp
 
-        // Only handle string content
-        guard let content = pasteboard.string(forType: .string) else { return }
+            // Only handle string content
+            if let content = pasteboard.string(forType: .string) {
+                // Truncate if content exceeds max size to prevent memory issues
+                let finalContent: String
+                if content.utf8.count > maxContentSize {
+                    // Find a safe truncation point (don't split UTF-8 characters)
+                    let truncatedContent = String(content.utf8.prefix(maxContentSize)) ?? String(content.prefix(maxContentSize / 4))
+                    finalContent = truncatedContent + "\n\n[Content truncated - original size: \(content.utf8.count) bytes]"
+                } else {
+                    finalContent = content
+                }
 
-        // Truncate if content exceeds max size to prevent memory issues
-        let finalContent: String
-        if content.utf8.count > maxContentSize {
-            // Find a safe truncation point (don't split UTF-8 characters)
-            let truncatedContent = String(content.utf8.prefix(maxContentSize)) ?? String(content.prefix(maxContentSize / 4))
-            finalContent = truncatedContent + "\n\n[Content truncated - original size: \(content.utf8.count) bytes]"
-        } else {
-            finalContent = content
+                Task { @MainActor in
+                    HistoryStore.shared.add(finalContent, sourceApp: sourceApp)
+                }
+            }
         }
 
-        Task { @MainActor in
-            HistoryStore.shared.add(finalContent, sourceApp: sourceApp)
-        }
+        // Always update the last known frontmost app for the next check
+        lastKnownFrontmostApp = currentFrontmostApp
     }
 
     func getCurrentContent() -> String? {
