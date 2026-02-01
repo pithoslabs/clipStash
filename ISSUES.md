@@ -12,6 +12,7 @@ This document details bugs, security issues, and code quality problems identifie
 | #2 | Race condition in paste flow | Use NSWorkspace activation notification instead of fixed delay; 500ms timeout fallback |
 | #3 | Silent data loss on save failure | Added `@Published saveError`, retry logic (3 attempts), and UI warning in menu bar |
 | #4 | Paste fails when no previous app exists | Always set clipboard content; only auto-paste if target app exists |
+| #6 | Blocking main thread with usleep | Replace `usleep()` with `DispatchQueue.main.asyncAfter` |
 | #8 | Unsynchronized access to history items | Added `@MainActor` to `HistoryStore` class |
 | #16 | No size limit on clipboard content | Limit to 1MB; truncate with size marker if exceeded |
 
@@ -186,7 +187,7 @@ private func checkForChanges() {
 
 ---
 
-### 6. Blocking Main Thread with usleep
+### 6. ~~Blocking Main Thread with usleep~~ ✅ FIXED
 
 **File:** `ClipStash/Services/PasteService.swift:35`
 
@@ -563,11 +564,11 @@ if content.utf8.count > maxContentSize {
 | Category | Count | Issues | Fixed |
 |----------|-------|--------|-------|
 | Critical | 3 | #1, #2, #3 | 3 (#1, #2, #3) |
-| Bugs | 4 | #4, #5, #6, #7 | 1 (#4) |
+| Bugs | 4 | #4, #5, #6, #7 | 2 (#4, #6) |
 | Thread Safety | 1 | #8 | 1 (#8) |
 | UX | 4 | #9, #10, #11, #12 | 0 |
 | Code Quality | 4 | #13, #14, #15, #16 | 1 (#16) |
-| **Total** | **16** | | **6 fixed** |
+| **Total** | **16** | | **7 fixed** |
 
 ## Priority Order for Fixes
 
@@ -577,7 +578,7 @@ if content.utf8.count > maxContentSize {
 4. ~~**#1** - Plaintext storage (security)~~ ✅ FIXED
 5. ~~**#2** - Race condition in paste (reliability)~~ ✅ FIXED
 6. ~~**#16** - No size limit (memory safety)~~ ✅ FIXED
-7. **#6** - Blocking main thread (performance)
+7. ~~**#6** - Blocking main thread (performance)~~ ✅ FIXED
 8. **#7** - Timer leak (resource management)
 9. **#5** - Wrong source attribution (accuracy)
 10. **#10** - Keyboard layout (internationalization)
