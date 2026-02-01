@@ -13,6 +13,7 @@ This document details bugs, security issues, and code quality problems identifie
 | #3 | Silent data loss on save failure | Added `@Published saveError`, retry logic (3 attempts), and UI warning in menu bar |
 | #4 | Paste fails when no previous app exists | Always set clipboard content; only auto-paste if target app exists |
 | #6 | Blocking main thread with usleep | Replace `usleep()` with `DispatchQueue.main.asyncAfter` |
+| #7 | Permission timer not retained | Store timer in property; stop after 5 min or on termination |
 | #8 | Unsynchronized access to history items | Added `@MainActor` to `HistoryStore` class |
 | #16 | No size limit on clipboard content | Limit to 1MB; truncate with size marker if exceeded |
 
@@ -218,7 +219,7 @@ DispatchQueue.main.asyncAfter(deadline: .now() + 0.03) {
 
 ---
 
-### 7. Memory Leak: Permission Polling Timer Not Retained
+### 7. ~~Memory Leak: Permission Polling Timer Not Retained~~ ✅ FIXED
 
 **File:** `ClipStash/ClipStashApp.swift:43-50`
 
@@ -564,11 +565,11 @@ if content.utf8.count > maxContentSize {
 | Category | Count | Issues | Fixed |
 |----------|-------|--------|-------|
 | Critical | 3 | #1, #2, #3 | 3 (#1, #2, #3) |
-| Bugs | 4 | #4, #5, #6, #7 | 2 (#4, #6) |
+| Bugs | 4 | #4, #5, #6, #7 | 3 (#4, #6, #7) |
 | Thread Safety | 1 | #8 | 1 (#8) |
 | UX | 4 | #9, #10, #11, #12 | 0 |
 | Code Quality | 4 | #13, #14, #15, #16 | 1 (#16) |
-| **Total** | **16** | | **7 fixed** |
+| **Total** | **16** | | **8 fixed** |
 
 ## Priority Order for Fixes
 
@@ -579,7 +580,7 @@ if content.utf8.count > maxContentSize {
 5. ~~**#2** - Race condition in paste (reliability)~~ ✅ FIXED
 6. ~~**#16** - No size limit (memory safety)~~ ✅ FIXED
 7. ~~**#6** - Blocking main thread (performance)~~ ✅ FIXED
-8. **#7** - Timer leak (resource management)
+8. ~~**#7** - Timer leak (resource management)~~ ✅ FIXED
 9. **#5** - Wrong source attribution (accuracy)
 10. **#10** - Keyboard layout (internationalization)
 11. **#11** - Multi-monitor support (usability)
