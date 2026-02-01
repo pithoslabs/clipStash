@@ -4,6 +4,15 @@ This document details bugs, security issues, and code quality problems identifie
 
 ---
 
+## Fixed Issues
+
+| Issue | Description | Fix |
+|-------|-------------|-----|
+| #4 | Paste fails when no previous app exists | Always set clipboard content; only auto-paste if target app exists |
+| #8 | Unsynchronized access to history items | Added `@MainActor` to `HistoryStore` class |
+
+---
+
 ## Critical Issues
 
 ### 1. Plaintext Storage of Sensitive Data
@@ -94,7 +103,7 @@ private func save() {
 
 ## Bugs
 
-### 4. Paste Fails When No Previous App Exists
+### 4. ~~Paste Fails When No Previous App Exists~~ ✅ FIXED
 
 **File:** `ClipStash/Views/PopupWindowController.swift:142-143`
 
@@ -248,7 +257,7 @@ permissionTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [
 
 ## Thread Safety Issues
 
-### 8. Unsynchronized Access to History Items
+### 8. ~~Unsynchronized Access to History Items~~ ✅ FIXED
 
 **File:** `ClipStash/Services/HistoryStore.swift`
 
@@ -547,19 +556,19 @@ if content.utf8.count > maxContentSize {
 
 ## Summary
 
-| Category | Count | Issues |
-|----------|-------|--------|
-| Critical | 3 | #1, #2, #3 |
-| Bugs | 4 | #4, #5, #6, #7 |
-| Thread Safety | 1 | #8 |
-| UX | 4 | #9, #10, #11, #12 |
-| Code Quality | 4 | #13, #14, #15, #16 |
-| **Total** | **16** | |
+| Category | Count | Issues | Fixed |
+|----------|-------|--------|-------|
+| Critical | 3 | #1, #2, #3 | 0 |
+| Bugs | 4 | #4, #5, #6, #7 | 1 (#4) |
+| Thread Safety | 1 | #8 | 1 (#8) |
+| UX | 4 | #9, #10, #11, #12 | 0 |
+| Code Quality | 4 | #13, #14, #15, #16 | 0 |
+| **Total** | **16** | | **2 fixed** |
 
 ## Priority Order for Fixes
 
-1. **#8** - Thread safety (crash risk)
-2. **#4** - Paste fails silently (broken functionality)
+1. ~~**#8** - Thread safety (crash risk)~~ ✅ FIXED
+2. ~~**#4** - Paste fails silently (broken functionality)~~ ✅ FIXED
 3. **#3** - Silent data loss (data integrity)
 4. **#1** - Plaintext storage (security)
 5. **#2** - Race condition in paste (reliability)
