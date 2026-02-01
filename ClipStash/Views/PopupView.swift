@@ -1,4 +1,5 @@
 import SwiftUI
+import Carbon.HIToolbox
 
 struct PopupView: View {
     @ObservedObject var historyStore = HistoryStore.shared
@@ -6,8 +7,23 @@ struct PopupView: View {
     @FocusState private var isSearchFocused: Bool
     @Environment(\.colorScheme) var colorScheme
 
-    var onItemSelected: ((ClipboardItem) -> Void)?
-    var onDismiss: (() -> Void)?
+    // Dynamic height calculation based on content
+    private var calculatedHeight: CGFloat {
+        let headerHeight: CGFloat = 45  // Search bar
+        let footerHeight: CGFloat = 40  // Footer
+        let separatorHeight: CGFloat = 1 // Two separators
+        let itemHeight: CGFloat = 52    // Approximate row height
+        let verticalPadding: CGFloat = 12
+
+        let items = historyStore.search(state.searchQuery)
+        let itemCount = items.isEmpty ? 1 : items.count // At least 1 for empty state
+        let contentHeight = CGFloat(itemCount) * itemHeight + verticalPadding
+
+        let totalHeight = headerHeight + footerHeight + separatorHeight + contentHeight
+
+        // Clamp between reasonable min/max
+        return min(max(totalHeight, 200), 500)
+    }
 
     private var filteredItems: [ClipboardItem] {
         historyStore.search(state.searchQuery)
@@ -94,13 +110,25 @@ struct PopupView: View {
                 Label("Navigate", systemImage: "arrow.up.arrow.down")
                 Label("Paste", systemImage: "return")
                 Label("Cancel", systemImage: "escape")
+
+                Spacer()
+
+                Button(action: {
+                    historyStore.clear()
+                }) {
+                    Label("Clear", systemImage: "trash")
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(.tertiary)
+                .opacity(historyStore.items.isEmpty ? 0.5 : 1.0)
+                .disabled(historyStore.items.isEmpty)
             }
             .font(.system(size: 11, weight: .medium))
             .foregroundStyle(.tertiary)
             .padding(.horizontal, 16)
             .padding(.vertical, 10)
         }
-        .frame(width: 420, height: 380)
+        .frame(width: 420, height: calculatedHeight)
         .background(LiquidGlassBackground())
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         .shadow(color: .black.opacity(0.25), radius: 30, x: 0, y: 15)
@@ -115,7 +143,7 @@ struct PopupView: View {
     }
 
     private func selectItem(_ item: ClipboardItem) {
-        onItemSelected?(item)
+        state.onItemSelected?(item)
     }
 
     func handleMouseDown(_ event: NSEvent) -> Bool {
@@ -129,33 +157,47 @@ struct PopupView: View {
     }
 
     func handleKeyDown(_ event: NSEvent) -> Bool {
-        switch Int(event.keyCode) {
-        case 125: // Down arrow
+        let keyCode = Int(event.keyCode)
+
+        switch keyCode {
+        case kVK_DownArrow:
             if state.selectedIndex < filteredItems.count - 1 {
                 state.selectedIndex += 1
             }
             return true
 
-        case 126: // Up arrow
+        case kVK_UpArrow:
             if state.selectedIndex > 0 {
                 state.selectedIndex -= 1
             }
             return true
 
-        case 36: // Return/Enter
+        case kVK_Return:
             if !filteredItems.isEmpty && state.selectedIndex < filteredItems.count {
                 selectItem(filteredItems[state.selectedIndex])
             }
             return true
 
-        case 53: // Escape
-            onDismiss?()
+        case kVK_Escape:
+            state.onDismiss?()
             return true
 
-        default:
-            // Check for Cmd+1 through Cmd+9
+        case kVK_Delete:
             if event.modifierFlags.contains(.command) {
-                if let number = Int(event.characters ?? ""), number >= 1 && number <= 9 {
+                historyStore.clear()
+                return true
+            }
+            return false
+
+        default:
+            // Check for Cmd+1 through Cmd+9 using key codes (layout-independent)
+            if event.modifierFlags.contains(.command) {
+                let numberKeyCodes: [Int: Int] = [
+                    kVK_ANSI_1: 1, kVK_ANSI_2: 2, kVK_ANSI_3: 3,
+                    kVK_ANSI_4: 4, kVK_ANSI_5: 5, kVK_ANSI_6: 6,
+                    kVK_ANSI_7: 7, kVK_ANSI_8: 8, kVK_ANSI_9: 9
+                ]
+                if let number = numberKeyCodes[keyCode] {
                     let index = number - 1
                     if index < filteredItems.count {
                         selectItem(filteredItems[index])

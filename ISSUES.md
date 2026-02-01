@@ -16,6 +16,13 @@ This document details bugs, security issues, and code quality problems identifie
 | #6 | Blocking main thread with usleep | Replace `usleep()` with `DispatchQueue.main.asyncAfter` |
 | #7 | Permission timer not retained | Store timer in property; stop after 5 min or on termination |
 | #8 | Unsynchronized access to history items | Added `@MainActor` to `HistoryStore` class |
+| #9 | Force unwrap on system directory | Use `guard let` with `fatalError` fallback |
+| #10 | Keyboard shortcuts depend on layout | Use key codes instead of `event.characters` |
+| #11 | Popup always appears on main screen | Use screen containing mouse cursor |
+| #12 | Fixed window size | Dynamic height based on content with min/max bounds |
+| #13 | Debug print statements | Removed all debug prints from production code |
+| #14 | Magic numbers for key codes | Use Carbon.HIToolbox constants |
+| #15 | Redundant callback architecture | Removed callback parameters; use only PopupState.shared |
 | #16 | No size limit on clipboard content | Limit to 1MB; truncate with size marker if exceeded |
 
 ---
@@ -304,7 +311,7 @@ let hasHistoryItems = !HistoryStore.shared.items.isEmpty  // Read on callback th
 
 ## UX Issues
 
-### 9. Force Unwrap on System Directory
+### 9. ~~Force Unwrap on System Directory~~ ✅ FIXED
 
 **File:** `ClipStash/Services/HistoryStore.swift:15`
 
@@ -325,7 +332,7 @@ guard let appSupport = FileManager.default.urls(for: .applicationSupportDirector
 
 ---
 
-### 10. Keyboard Shortcuts Depend on Layout
+### 10. ~~Keyboard Shortcuts Depend on Layout~~ ✅ FIXED
 
 **File:** `ClipStash/Views/PopupView.swift:177`
 
@@ -361,7 +368,7 @@ if event.modifierFlags.contains(.command), let number = numberKeyCodes[keyCode] 
 
 ---
 
-### 11. Popup Always Appears on Main Screen
+### 11. ~~Popup Always Appears on Main Screen~~ ✅ FIXED
 
 **File:** `ClipStash/Views/PopupWindowController.swift:86`
 
@@ -391,7 +398,7 @@ if let screen = NSScreen.screens.first(where: { NSMouseInRect(NSEvent.mouseLocat
 
 ---
 
-### 12. Fixed Window Size
+### 12. ~~Fixed Window Size~~ ✅ FIXED
 
 **File:** `ClipStash/Views/PopupView.swift:115`
 
@@ -420,7 +427,7 @@ The popup has a hardcoded size of 420x380 points. It doesn't adapt to:
 
 ## Code Quality Issues
 
-### 13. Debug Print Statements in Production
+### 13. ~~Debug Print Statements in Production~~ ✅ FIXED
 
 **Files:**
 - `ClipStash/Services/HotkeyManager.swift` (lines 94, 97, 108, 115, 119)
@@ -449,7 +456,7 @@ print("[HotkeyManager] Cmd+V detected")
 
 ---
 
-### 14. Magic Numbers for Key Codes
+### 14. ~~Magic Numbers for Key Codes~~ ✅ FIXED
 
 **File:** `ClipStash/Views/PopupView.swift:144-167`
 
@@ -480,7 +487,7 @@ case kVK_Delete:
 
 ---
 
-### 15. Redundant Callback Architecture
+### 15. ~~Redundant Callback Architecture~~ ✅ FIXED
 
 **Files:**
 - `ClipStash/Models/PopupState.swift`
@@ -568,9 +575,9 @@ if content.utf8.count > maxContentSize {
 | Critical | 3 | #1, #2, #3 | 3 (#1, #2, #3) |
 | Bugs | 4 | #4, #5, #6, #7 | 4 (#4, #5, #6, #7) |
 | Thread Safety | 1 | #8 | 1 (#8) |
-| UX | 4 | #9, #10, #11, #12 | 0 |
-| Code Quality | 4 | #13, #14, #15, #16 | 1 (#16) |
-| **Total** | **16** | | **9 fixed** |
+| UX | 4 | #9, #10, #11, #12 | 4 (#9, #10, #11, #12) |
+| Code Quality | 4 | #13, #14, #15, #16 | 4 (#13, #14, #15, #16) |
+| **Total** | **16** | | **16 fixed** |
 
 ## Priority Order for Fixes
 
@@ -583,10 +590,10 @@ if content.utf8.count > maxContentSize {
 7. ~~**#6** - Blocking main thread (performance)~~ ✅ FIXED
 8. ~~**#7** - Timer leak (resource management)~~ ✅ FIXED
 9. ~~**#5** - Wrong source attribution (accuracy)~~ ✅ FIXED
-10. **#10** - Keyboard layout (internationalization)
-11. **#11** - Multi-monitor support (usability)
-12. **#13** - Debug prints (professionalism)
-13. **#14** - Magic numbers (maintainability)
-14. **#15** - Redundant callbacks (code quality)
-15. **#9** - Force unwrap (robustness)
-16. **#12** - Fixed size (accessibility)
+10. ~~**#10** - Keyboard layout (internationalization)~~ ✅ FIXED
+11. ~~**#11** - Multi-monitor support (usability)~~ ✅ FIXED
+12. ~~**#13** - Debug prints (professionalism)~~ ✅ FIXED
+13. ~~**#14** - Magic numbers (maintainability)~~ ✅ FIXED
+14. ~~**#15** - Redundant callbacks (code quality)~~ ✅ FIXED
+15. ~~**#9** - Force unwrap (robustness)~~ ✅ FIXED
+16. ~~**#12** - Fixed size (accessibility)~~ ✅ FIXED
