@@ -98,17 +98,13 @@ final class HotkeyManager {
             // Check clipboard content type
             let pasteboard = NSPasteboard.general
 
-            // If clipboard has files (copied from Finder), let native paste handle it
-            let hasFileContent = pasteboard.types?.contains(where: {
-                $0 == .fileURL || $0.rawValue == "NSFilenamesPboardType" || $0.rawValue == "public.file-url"
-            }) ?? false
-
-            if hasFileContent {
+            // Only intercept if clipboard contains purely text content
+            // Let native paste handle files, images, app-specific data (video editors, design tools, etc.)
+            if !isPlainTextClipboard(pasteboard) {
                 return Unmanaged.passRetained(event)
             }
 
             // Check if clipboard has text content we can handle
-            // If clipboard only has app-specific data (video editors, design tools, etc.), let native paste through
             let hasTextContent = pasteboard.string(forType: .string) != nil
             let hasHistoryItems = HistoryStore.shared.hasItems
 
@@ -117,8 +113,6 @@ final class HotkeyManager {
             }
 
             if !hasTextContent {
-                // Clipboard has non-text data (e.g., video timeline element)
-                // Let native paste handle it
                 return Unmanaged.passRetained(event)
             }
 
@@ -138,5 +132,62 @@ final class HotkeyManager {
     func requestAccessibilityPermission() {
         let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
         AXIsProcessTrustedWithOptions(options)
+    }
+
+    /// Check if clipboard contains only standard text types (no app-specific data)
+    /// Returns false for files, images, video editor timeline items, design tool objects, etc.
+    private func isPlainTextClipboard(_ pasteboard: NSPasteboard) -> Bool {
+        guard let types = pasteboard.types else { return false }
+
+        // Standard text-related UTIs that we should handle
+        let textTypes: Set<String> = [
+            "public.plain-text",
+            "public.utf8-plain-text",
+            "public.utf16-plain-text",
+            "public.utf16-external-plain-text",
+            "public.rtf",
+            "public.html",
+            "public.text",
+            "NSStringPboardType",
+            "NeXT plain ascii pasteboard type",
+            "CorePasteboardFlavorType 0x54455854",  // TEXT
+            "dyn.ah62d4rv4gu8y63n2nuuhg5pbsm4ca6dbsr4gnkdcarmc65zhm",  // Dynamic text type
+        ]
+
+        // Types to explicitly reject (files, images, app-specific content)
+        for type in types {
+            let typeStr = type.rawValue
+
+            // Reject file URLs
+            if typeStr.contains("file-url") || typeStr.contains("NSFilenamesPboardType") {
+                return false
+            }
+
+            // Reject images
+            if typeStr.contains("public.image") || typeStr.contains("public.png") ||
+               typeStr.contains("public.jpeg") || typeStr.contains("public.tiff") {
+                return false
+            }
+
+            // Reject app-specific types (com.company.app.*)
+            // These indicate specialized content from apps like CapCut, Final Cut, Premiere, etc.
+            if typeStr.hasPrefix("com.") && !typeStr.hasPrefix("com.apple.") {
+                // Third-party app-specific type - let native paste handle it
+                return false
+            }
+
+            // Reject dynamic types that aren't text (often app-specific)
+            if typeStr.hasPrefix("dyn.") && !textTypes.contains(typeStr) {
+                // Check if any non-text type exists alongside
+                let hasNonTextDynType = types.contains { t in
+                    t.rawValue.hasPrefix("dyn.") && !textTypes.contains(t.rawValue)
+                }
+                if hasNonTextDynType && types.count > 2 {
+                    return false
+                }
+            }
+        }
+
+        return true
     }
 }
