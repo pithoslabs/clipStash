@@ -34,7 +34,6 @@ final class HotkeyManager {
             },
             userInfo: Unmanaged.passUnretained(self).toOpaque()
         ) else {
-            print("Failed to create event tap")
             return false
         }
 
@@ -91,32 +90,38 @@ final class HotkeyManager {
         if keyCode == kVK_ANSI_V && isCommandPressed && isNoOtherModifiers {
             // Check if this is our own simulated event
             let userData = event.getIntegerValueField(.eventSourceUserData)
-            print("[HotkeyManager] Cmd+V detected, userData: \(userData), marker: \(PasteService.markerValue)")
 
             if userData == PasteService.markerValue {
-                print("[HotkeyManager] → Our event, passing through")
+                return Unmanaged.passRetained(event)
+            }
+
+            // Check clipboard content type
+            let pasteboard = NSPasteboard.general
+
+            // If clipboard has files (copied from Finder), let native paste handle it
+            let hasFileContent = pasteboard.types?.contains(where: {
+                $0 == .fileURL || $0.rawValue == "NSFilenamesPboardType" || $0.rawValue == "public.file-url"
+            }) ?? false
+
+            if hasFileContent {
                 return Unmanaged.passRetained(event)
             }
 
             // Check if clipboard has text content we can handle
             // If clipboard only has app-specific data (video editors, design tools, etc.), let native paste through
-            let pasteboard = NSPasteboard.general
             let hasTextContent = pasteboard.string(forType: .string) != nil
             let hasHistoryItems = HistoryStore.shared.hasItems
 
             if !hasTextContent && !hasHistoryItems {
-                print("[HotkeyManager] → No text content and no history, passing through for native paste")
                 return Unmanaged.passRetained(event)
             }
 
             if !hasTextContent {
                 // Clipboard has non-text data (e.g., video timeline element)
                 // Let native paste handle it
-                print("[HotkeyManager] → Non-text clipboard content, passing through for native paste")
                 return Unmanaged.passRetained(event)
             }
 
-            print("[HotkeyManager] → User event, showing popup")
             DispatchQueue.main.async { [weak self] in
                 self?.onPasteTriggered?()
             }
