@@ -27,6 +27,7 @@ final class HistoryStore: ObservableObject {
     private let maxItems = 15
     private let maxAge: TimeInterval = 24 * 60 * 60 // 24 hours
     private let storageURL: URL
+    private let legacyStorageURL: URL  // For migration from unencrypted storage
     private var cleanupTimer: Timer?
 
     private init() {
@@ -35,7 +36,9 @@ final class HistoryStore: ObservableObject {
 
         try? FileManager.default.createDirectory(at: appFolder, withIntermediateDirectories: true)
 
-        self.storageURL = appFolder.appendingPathComponent("history.json")
+        self.storageURL = appFolder.appendingPathComponent("history.encrypted")
+        self.legacyStorageURL = appFolder.appendingPathComponent("history.json")
+        migrateFromLegacyStorageIfNeeded()
         load()
         startCleanupTimer()
     }
@@ -101,12 +104,40 @@ final class HistoryStore: ObservableObject {
         cleanup()
     }
 
+    /// Migrates from unencrypted history.json to encrypted storage
+    private func migrateFromLegacyStorageIfNeeded() {
+        let fileManager = FileManager.default
+
+        // Check if legacy file exists and new encrypted file doesn't
+        guard fileManager.fileExists(atPath: legacyStorageURL.path),
+              !fileManager.fileExists(atPath: storageURL.path) else {
+            return
+        }
+
+        do {
+            // Load from legacy unencrypted file
+            let legacyData = try Data(contentsOf: legacyStorageURL)
+            let legacyItems = try JSONDecoder().decode([ClipboardItem].self, from: legacyData)
+
+            // Save to new encrypted format
+            let jsonData = try JSONEncoder().encode(legacyItems)
+            let encryptedData = try EncryptionHelper.encrypt(jsonData)
+            try encryptedData.write(to: storageURL, options: .atomic)
+
+            // Remove legacy file after successful migration
+            try? fileManager.removeItem(at: legacyStorageURL)
+        } catch {
+            // Migration failed - legacy file remains, will try again next launch
+        }
+    }
+
     private func load() {
         guard FileManager.default.fileExists(atPath: storageURL.path) else { return }
 
         do {
-            let data = try Data(contentsOf: storageURL)
-            items = try JSONDecoder().decode([ClipboardItem].self, from: data)
+            let encryptedData = try Data(contentsOf: storageURL)
+            let jsonData = try EncryptionHelper.decrypt(encryptedData)
+            items = try JSONDecoder().decode([ClipboardItem].self, from: jsonData)
             updateHasItems()
         } catch {
             print("Failed to load history: \(error)")
@@ -119,8 +150,9 @@ final class HistoryStore: ObservableObject {
 
         for attempt in 1...maxRetries {
             do {
-                let data = try JSONEncoder().encode(items)
-                try data.write(to: storageURL, options: .atomic)
+                let jsonData = try JSONEncoder().encode(items)
+                let encryptedData = try EncryptionHelper.encrypt(jsonData)
+                try encryptedData.write(to: storageURL, options: .atomic)
                 // Success - clear any previous error
                 if saveError != nil {
                     saveError = nil

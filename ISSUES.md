@@ -8,6 +8,7 @@ This document details bugs, security issues, and code quality problems identifie
 
 | Issue | Description | Fix |
 |-------|-------------|-----|
+| #1 | Plaintext storage of sensitive data | AES-GCM encryption with Keychain-stored key; auto-migration from legacy format |
 | #3 | Silent data loss on save failure | Added `@Published saveError`, retry logic (3 attempts), and UI warning in menu bar |
 | #4 | Paste fails when no previous app exists | Always set clipboard content; only auto-paste if target app exists |
 | #8 | Unsynchronized access to history items | Added `@MainActor` to `HistoryStore` class |
@@ -16,7 +17,7 @@ This document details bugs, security issues, and code quality problems identifie
 
 ## Critical Issues
 
-### 1. Plaintext Storage of Sensitive Data
+### 1. ~~Plaintext Storage of Sensitive Data~~ ✅ FIXED
 
 **File:** `ClipStash/Services/HistoryStore.swift:20`
 
@@ -559,19 +560,19 @@ if content.utf8.count > maxContentSize {
 
 | Category | Count | Issues | Fixed |
 |----------|-------|--------|-------|
-| Critical | 3 | #1, #2, #3 | 1 (#3) |
+| Critical | 3 | #1, #2, #3 | 2 (#1, #3) |
 | Bugs | 4 | #4, #5, #6, #7 | 1 (#4) |
 | Thread Safety | 1 | #8 | 1 (#8) |
 | UX | 4 | #9, #10, #11, #12 | 0 |
 | Code Quality | 4 | #13, #14, #15, #16 | 0 |
-| **Total** | **16** | | **3 fixed** |
+| **Total** | **16** | | **4 fixed** |
 
 ## Priority Order for Fixes
 
 1. ~~**#8** - Thread safety (crash risk)~~ ✅ FIXED
 2. ~~**#4** - Paste fails silently (broken functionality)~~ ✅ FIXED
 3. ~~**#3** - Silent data loss (data integrity)~~ ✅ FIXED
-4. **#1** - Plaintext storage (security)
+4. ~~**#1** - Plaintext storage (security)~~ ✅ FIXED
 5. **#2** - Race condition in paste (reliability)
 6. **#16** - No size limit (memory safety)
 7. **#6** - Blocking main thread (performance)
