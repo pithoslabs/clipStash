@@ -92,6 +92,12 @@ struct PopupView: View {
                         .padding(.vertical, 6)
                         .padding(.horizontal, 8)
                     }
+                    .onHover { hovering in
+                        // Clear hoveredIndex when mouse leaves the scroll area
+                        if !hovering {
+                            state.hoveredIndex = nil
+                        }
+                    }
                     .onChange(of: state.selectedIndex) { _, newValue in
                         withAnimation(.easeOut(duration: 0.15)) {
                             proxy.scrollTo(newValue, anchor: .center)
