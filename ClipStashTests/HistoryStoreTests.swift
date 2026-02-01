@@ -1,6 +1,7 @@
 import XCTest
 @testable import ClipStash
 
+@MainActor
 final class HistoryStoreTests: XCTestCase {
 
     var store: HistoryStore!

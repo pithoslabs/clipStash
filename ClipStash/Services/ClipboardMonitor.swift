@@ -37,7 +37,9 @@ final class ClipboardMonitor: ObservableObject {
         // Only handle string content
         guard let content = pasteboard.string(forType: .string) else { return }
 
-        HistoryStore.shared.add(content, sourceApp: sourceApp)
+        Task { @MainActor in
+            HistoryStore.shared.add(content, sourceApp: sourceApp)
+        }
     }
 
     func getCurrentContent() -> String? {

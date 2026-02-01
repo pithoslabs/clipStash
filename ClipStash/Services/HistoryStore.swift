@@ -1,10 +1,27 @@
 import Foundation
 import Combine
+import os.lock
 
+@MainActor
 final class HistoryStore: ObservableObject {
     static let shared = HistoryStore()
 
     @Published private(set) var items: [ClipboardItem] = []
+
+    // Thread-safe check for whether history has items (for use from non-main-actor contexts)
+    private nonisolated(unsafe) var _hasItems: Bool = false
+    private let _hasItemsLock = OSAllocatedUnfairLock()
+
+    nonisolated var hasItems: Bool {
+        _hasItemsLock.withLock { _hasItems }
+    }
+
+    private func updateHasItems() {
+        let hasItems = !items.isEmpty
+        _hasItemsLock.withLock {
+            _hasItems = hasItems
+        }
+    }
 
     private let maxItems = 15
     private let maxAge: TimeInterval = 24 * 60 * 60 // 24 hours
@@ -42,16 +59,19 @@ final class HistoryStore: ObservableObject {
             items = Array(items.prefix(maxItems))
         }
 
+        updateHasItems()
         save()
     }
 
     func remove(_ item: ClipboardItem) {
         items.removeAll { $0.id == item.id }
+        updateHasItems()
         save()
     }
 
     func clear() {
         items.removeAll()
+        updateHasItems()
         save()
     }
 
@@ -65,13 +85,16 @@ final class HistoryStore: ObservableObject {
         let before = items.count
         items.removeAll { $0.copiedAt < cutoff }
         if items.count != before {
+            updateHasItems()
             save()
         }
     }
 
     private func startCleanupTimer() {
         cleanupTimer = Timer.scheduledTimer(withTimeInterval: 60 * 60, repeats: true) { [weak self] _ in
-            self?.cleanup()
+            Task { @MainActor in
+                self?.cleanup()
+            }
         }
         // Run cleanup immediately on start
         cleanup()
@@ -83,6 +106,7 @@ final class HistoryStore: ObservableObject {
         do {
             let data = try Data(contentsOf: storageURL)
             items = try JSONDecoder().decode([ClipboardItem].self, from: data)
+            updateHasItems()
         } catch {
             print("Failed to load history: \(error)")
         }

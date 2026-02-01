@@ -140,20 +140,21 @@ final class PopupWindowController {
     }
 
     private func handleItemSelected(_ item: ClipboardItem) {
-        guard let targetApp = previousApp else { return }
-
-        // Set clipboard
+        // Always set clipboard content first
         ClipboardMonitor.shared.setContent(item.content)
 
         // Dismiss popup
         dismiss()
 
-        // Activate target
-        targetApp.activate()
+        // If we have a target app, activate it and paste
+        // Otherwise, content is on clipboard for user to paste manually
+        if let targetApp = previousApp {
+            targetApp.activate()
 
-        // Wait for activation, then paste (our event is marked so it won't trigger popup)
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            PasteService.shared.paste()
+            // Wait for activation, then paste (our event is marked so it won't trigger popup)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                PasteService.shared.paste()
+            }
         }
     }
 }
