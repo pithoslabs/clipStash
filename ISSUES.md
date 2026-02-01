@@ -9,6 +9,7 @@ This document details bugs, security issues, and code quality problems identifie
 | Issue | Description | Fix |
 |-------|-------------|-----|
 | #1 | Plaintext storage of sensitive data | AES-GCM encryption with Keychain-stored key; auto-migration from legacy format |
+| #2 | Race condition in paste flow | Use NSWorkspace activation notification instead of fixed delay; 500ms timeout fallback |
 | #3 | Silent data loss on save failure | Added `@Published saveError`, retry logic (3 attempts), and UI warning in menu bar |
 | #4 | Paste fails when no previous app exists | Always set clipboard content; only auto-paste if target app exists |
 | #8 | Unsynchronized access to history items | Added `@MainActor` to `HistoryStore` class |
@@ -41,7 +42,7 @@ self.storageURL = appFolder.appendingPathComponent("history.json")
 
 ---
 
-### 2. Race Condition in Paste Flow
+### 2. ~~Race Condition in Paste Flow~~ ✅ FIXED
 
 **File:** `ClipStash/Views/PopupWindowController.swift:155`
 
@@ -560,12 +561,12 @@ if content.utf8.count > maxContentSize {
 
 | Category | Count | Issues | Fixed |
 |----------|-------|--------|-------|
-| Critical | 3 | #1, #2, #3 | 2 (#1, #3) |
+| Critical | 3 | #1, #2, #3 | 3 (#1, #2, #3) |
 | Bugs | 4 | #4, #5, #6, #7 | 1 (#4) |
 | Thread Safety | 1 | #8 | 1 (#8) |
 | UX | 4 | #9, #10, #11, #12 | 0 |
 | Code Quality | 4 | #13, #14, #15, #16 | 0 |
-| **Total** | **16** | | **4 fixed** |
+| **Total** | **16** | | **5 fixed** |
 
 ## Priority Order for Fixes
 
@@ -573,7 +574,7 @@ if content.utf8.count > maxContentSize {
 2. ~~**#4** - Paste fails silently (broken functionality)~~ ✅ FIXED
 3. ~~**#3** - Silent data loss (data integrity)~~ ✅ FIXED
 4. ~~**#1** - Plaintext storage (security)~~ ✅ FIXED
-5. **#2** - Race condition in paste (reliability)
+5. ~~**#2** - Race condition in paste (reliability)~~ ✅ FIXED
 6. **#16** - No size limit (memory safety)
 7. **#6** - Blocking main thread (performance)
 8. **#7** - Timer leak (resource management)
