@@ -22,6 +22,8 @@ final class PopupWindowController {
     private var mouseMonitor: Any?
     private var globalClickMonitor: Any?
     private var previousApp: NSRunningApplication?
+    private var activationObserver: Any?
+    private var activationTimeoutTask: DispatchWorkItem?
 
     private init() {}
 
@@ -148,13 +150,47 @@ final class PopupWindowController {
 
         // If we have a target app, activate it and paste
         // Otherwise, content is on clipboard for user to paste manually
-        if let targetApp = previousApp {
-            targetApp.activate()
+        guard let targetApp = previousApp else { return }
 
-            // Wait for activation, then paste (our event is marked so it won't trigger popup)
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+        // Set up observer for app activation before requesting activation
+        activationObserver = NSWorkspace.shared.notificationCenter.addObserver(
+            forName: NSWorkspace.didActivateApplicationNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] notification in
+            guard let activatedApp = notification.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication,
+                  activatedApp.processIdentifier == targetApp.processIdentifier else {
+                return
+            }
+
+            // Target app is now active - paste and clean up
+            self?.cleanupActivationObserver()
+            PasteService.shared.paste()
+        }
+
+        // Set up timeout in case activation notification never fires
+        let timeoutTask = DispatchWorkItem { [weak self] in
+            guard self?.activationObserver != nil else { return }
+
+            // Timeout reached - check if app is frontmost and paste anyway
+            self?.cleanupActivationObserver()
+            if NSWorkspace.shared.frontmostApplication?.processIdentifier == targetApp.processIdentifier {
                 PasteService.shared.paste()
             }
         }
+        activationTimeoutTask = timeoutTask
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: timeoutTask)
+
+        // Request activation
+        targetApp.activate()
+    }
+
+    private func cleanupActivationObserver() {
+        if let observer = activationObserver {
+            NSWorkspace.shared.notificationCenter.removeObserver(observer)
+            activationObserver = nil
+        }
+        activationTimeoutTask?.cancel()
+        activationTimeoutTask = nil
     }
 }
