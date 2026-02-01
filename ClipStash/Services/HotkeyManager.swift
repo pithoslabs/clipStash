@@ -102,7 +102,7 @@ final class HotkeyManager {
             // If clipboard only has app-specific data (video editors, design tools, etc.), let native paste through
             let pasteboard = NSPasteboard.general
             let hasTextContent = pasteboard.string(forType: .string) != nil
-            let hasHistoryItems = !HistoryStore.shared.items.isEmpty
+            let hasHistoryItems = HistoryStore.shared.hasItems
 
             if !hasTextContent && !hasHistoryItems {
                 print("[HotkeyManager] → No text content and no history, passing through for native paste")
