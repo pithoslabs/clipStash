@@ -7,6 +7,7 @@ final class HistoryStore: ObservableObject {
     static let shared = HistoryStore()
 
     @Published private(set) var items: [ClipboardItem] = []
+    @Published private(set) var saveError: Error?
 
     // Thread-safe check for whether history has items (for use from non-main-actor contexts)
     private nonisolated(unsafe) var _hasItems: Bool = false
@@ -113,11 +114,38 @@ final class HistoryStore: ObservableObject {
     }
 
     private func save() {
-        do {
-            let data = try JSONEncoder().encode(items)
-            try data.write(to: storageURL, options: .atomic)
-        } catch {
-            print("Failed to save history: \(error)")
+        let maxRetries = 3
+        var lastError: Error?
+
+        for attempt in 1...maxRetries {
+            do {
+                let data = try JSONEncoder().encode(items)
+                try data.write(to: storageURL, options: .atomic)
+                // Success - clear any previous error
+                if saveError != nil {
+                    saveError = nil
+                }
+                return
+            } catch {
+                lastError = error
+                if attempt < maxRetries {
+                    // Brief delay before retry
+                    Thread.sleep(forTimeInterval: 0.1 * Double(attempt))
+                }
+            }
         }
+
+        // All retries failed
+        saveError = lastError
+    }
+
+    /// Manually retry saving after a failure
+    func retrySave() {
+        save()
+    }
+
+    /// Dismiss the save error without retrying
+    func dismissSaveError() {
+        saveError = nil
     }
 }

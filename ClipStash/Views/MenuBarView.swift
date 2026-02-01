@@ -27,6 +27,39 @@ struct MenuBarView: View {
                 Divider()
             }
 
+            if historyStore.saveError != nil {
+                VStack(spacing: 8) {
+                    Image(systemName: "exclamationmark.circle.fill")
+                        .foregroundColor(.red)
+                        .font(.system(size: 20))
+
+                    Text("Failed to save history")
+                        .font(.system(size: 12, weight: .medium))
+
+                    Text("Changes may be lost on restart")
+                        .font(.system(size: 11))
+                        .foregroundColor(.secondary)
+
+                    HStack(spacing: 8) {
+                        Button("Retry") {
+                            historyStore.retrySave()
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .controlSize(.small)
+
+                        Button("Dismiss") {
+                            historyStore.dismissSaveError()
+                        }
+                        .buttonStyle(.bordered)
+                        .controlSize(.small)
+                    }
+                }
+                .padding()
+                .frame(maxWidth: .infinity)
+
+                Divider()
+            }
+
             // Recent items preview
             if historyStore.items.isEmpty {
                 Text("No clipboard history")
