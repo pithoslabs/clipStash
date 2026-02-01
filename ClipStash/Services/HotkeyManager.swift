@@ -95,18 +95,22 @@ final class HotkeyManager {
                 return Unmanaged.passRetained(event)
             }
 
-            // Check if frontmost app is one where we should let native paste through
-            // (video editors, design tools, etc. that use internal clipboard formats)
-            if isExcludedApp() {
+            let pasteboard = NSPasteboard.general
+            guard let types = pasteboard.types else {
                 return Unmanaged.passRetained(event)
             }
 
-            // Check clipboard content type
-            let pasteboard = NSPasteboard.general
+            // If clipboard has files, let native paste handle it
+            let hasFiles = types.contains(where: {
+                $0 == .fileURL || $0.rawValue == "NSFilenamesPboardType" || $0.rawValue == "public.file-url"
+            })
+            if hasFiles {
+                return Unmanaged.passRetained(event)
+            }
 
-            // Only intercept if clipboard contains purely text content
-            // Let native paste handle files, images, app-specific data
-            if !isPlainTextClipboard(pasteboard) {
+            // Check if frontmost app is excluded (video editors, design tools)
+            if let bundleID = NSWorkspace.shared.frontmostApplication?.bundleIdentifier,
+               Self.excludedBundleIDs.contains(bundleID) {
                 return Unmanaged.passRetained(event)
             }
 
@@ -162,69 +166,4 @@ final class HotkeyManager {
         "com.apple.garageband10",       // GarageBand
         "com.apple.logic10",            // Logic Pro
     ]
-
-    /// Check if frontmost app should be excluded from ClipStash interception
-    private func isExcludedApp() -> Bool {
-        guard let bundleID = NSWorkspace.shared.frontmostApplication?.bundleIdentifier else {
-            return false
-        }
-        return Self.excludedBundleIDs.contains(bundleID)
-    }
-
-    /// Check if clipboard contains only standard text types (no app-specific data)
-    /// Returns false for files, images, video editor timeline items, design tool objects, etc.
-    private func isPlainTextClipboard(_ pasteboard: NSPasteboard) -> Bool {
-        guard let types = pasteboard.types else { return false }
-
-        // Standard text-related UTIs that we should handle
-        let textTypes: Set<String> = [
-            "public.plain-text",
-            "public.utf8-plain-text",
-            "public.utf16-plain-text",
-            "public.utf16-external-plain-text",
-            "public.rtf",
-            "public.html",
-            "public.text",
-            "NSStringPboardType",
-            "NeXT plain ascii pasteboard type",
-            "CorePasteboardFlavorType 0x54455854",  // TEXT
-            "dyn.ah62d4rv4gu8y63n2nuuhg5pbsm4ca6dbsr4gnkdcarmc65zhm",  // Dynamic text type
-        ]
-
-        // Types to explicitly reject (files, images, app-specific content)
-        for type in types {
-            let typeStr = type.rawValue
-
-            // Reject file URLs
-            if typeStr.contains("file-url") || typeStr.contains("NSFilenamesPboardType") {
-                return false
-            }
-
-            // Reject images
-            if typeStr.contains("public.image") || typeStr.contains("public.png") ||
-               typeStr.contains("public.jpeg") || typeStr.contains("public.tiff") {
-                return false
-            }
-
-            // Reject app-specific types (com.company.app.*)
-            // These indicate specialized content from apps like CapCut, Final Cut, Premiere, etc.
-            if typeStr.hasPrefix("com.") && !typeStr.hasPrefix("com.apple.") {
-                // Third-party app-specific type - let native paste handle it
-                return false
-            }
-
-            // Reject dynamic types that aren't text (often app-specific)
-            if typeStr.hasPrefix("dyn.") && !textTypes.contains(typeStr) {
-                // Check if any non-text type exists alongside
-                let hasNonTextDynType = types.contains { t in
-                    t.rawValue.hasPrefix("dyn.") && !textTypes.contains(t.rawValue)
-                }
-                if hasNonTextDynType && types.count > 2 {
-                    return false
-                }
-            }
-        }
-
-        return true
-    }
 }
