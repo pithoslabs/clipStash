@@ -32,9 +32,12 @@ final class PasteService {
 
         print("[PasteService] Posting keyDown...")
         keyDown.post(tap: .cghidEventTap)
-        usleep(30000)
-        print("[PasteService] Posting keyUp...")
-        keyUp.post(tap: .cghidEventTap)
-        print("[PasteService] Done")
+
+        // Post keyUp after brief delay without blocking main thread
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.03) {
+            print("[PasteService] Posting keyUp...")
+            keyUp.post(tap: .cghidEventTap)
+            print("[PasteService] Done")
+        }
     }
 }
