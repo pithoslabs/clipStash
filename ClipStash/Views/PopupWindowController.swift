@@ -43,9 +43,6 @@ final class PopupWindowController {
 
         if currentFrontApp?.bundleIdentifier != ourBundleId {
             previousApp = currentFrontApp
-            print("[ClipStash] Stored previousApp: \(previousApp?.localizedName ?? "nil")")
-        } else {
-            print("[ClipStash] Current frontmost is us, keeping previousApp: \(previousApp?.localizedName ?? "nil")")
         }
 
         // Reset shared state and set callbacks
@@ -57,14 +54,7 @@ final class PopupWindowController {
             self?.dismiss()
         }
 
-        let view = PopupView(
-            onItemSelected: { [weak self] item in
-                self?.handleItemSelected(item)
-            },
-            onDismiss: { [weak self] in
-                self?.dismiss()
-            }
-        )
+        let view = PopupView()
         popupView = view
 
         let hostingView = FirstMouseHostingView(rootView: view)
@@ -84,8 +74,10 @@ final class PopupWindowController {
         window.hasShadow = true
         window.isMovableByWindowBackground = false
 
-        // Center on screen
-        if let screen = NSScreen.main {
+        // Center on screen containing mouse cursor (or main screen as fallback)
+        let mouseLocation = NSEvent.mouseLocation
+        let screen = NSScreen.screens.first { NSMouseInRect(mouseLocation, $0.frame, false) } ?? NSScreen.main
+        if let screen = screen {
             let screenFrame = screen.visibleFrame
             let windowFrame = window.frame
             let x = screenFrame.midX - windowFrame.width / 2
