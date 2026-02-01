@@ -12,6 +12,7 @@ This document details bugs, security issues, and code quality problems identifie
 | #2 | Race condition in paste flow | Use NSWorkspace activation notification instead of fixed delay; 500ms timeout fallback |
 | #3 | Silent data loss on save failure | Added `@Published saveError`, retry logic (3 attempts), and UI warning in menu bar |
 | #4 | Paste fails when no previous app exists | Always set clipboard content; only auto-paste if target app exists |
+| #5 | Wrong source app attribution | Track frontmost app continuously; use app from before change detected |
 | #6 | Blocking main thread with usleep | Replace `usleep()` with `DispatchQueue.main.asyncAfter` |
 | #7 | Permission timer not retained | Store timer in property; stop after 5 min or on termination |
 | #8 | Unsynchronized access to history items | Added `@MainActor` to `HistoryStore` class |
@@ -154,7 +155,7 @@ private func handleItemSelected(_ item: ClipboardItem) {
 
 ---
 
-### 5. Wrong Source App Attribution
+### 5. ~~Wrong Source App Attribution~~ ✅ FIXED
 
 **File:** `ClipStash/Services/ClipboardMonitor.swift:34-35`
 
@@ -565,11 +566,11 @@ if content.utf8.count > maxContentSize {
 | Category | Count | Issues | Fixed |
 |----------|-------|--------|-------|
 | Critical | 3 | #1, #2, #3 | 3 (#1, #2, #3) |
-| Bugs | 4 | #4, #5, #6, #7 | 3 (#4, #6, #7) |
+| Bugs | 4 | #4, #5, #6, #7 | 4 (#4, #5, #6, #7) |
 | Thread Safety | 1 | #8 | 1 (#8) |
 | UX | 4 | #9, #10, #11, #12 | 0 |
 | Code Quality | 4 | #13, #14, #15, #16 | 1 (#16) |
-| **Total** | **16** | | **8 fixed** |
+| **Total** | **16** | | **9 fixed** |
 
 ## Priority Order for Fixes
 
@@ -581,7 +582,7 @@ if content.utf8.count > maxContentSize {
 6. ~~**#16** - No size limit (memory safety)~~ ✅ FIXED
 7. ~~**#6** - Blocking main thread (performance)~~ ✅ FIXED
 8. ~~**#7** - Timer leak (resource management)~~ ✅ FIXED
-9. **#5** - Wrong source attribution (accuracy)
+9. ~~**#5** - Wrong source attribution (accuracy)~~ ✅ FIXED
 10. **#10** - Keyboard layout (internationalization)
 11. **#11** - Multi-monitor support (usability)
 12. **#13** - Debug prints (professionalism)
