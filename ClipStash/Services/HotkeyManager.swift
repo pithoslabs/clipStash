@@ -95,11 +95,17 @@ final class HotkeyManager {
                 return Unmanaged.passRetained(event)
             }
 
+            // Check if frontmost app is one where we should let native paste through
+            // (video editors, design tools, etc. that use internal clipboard formats)
+            if isExcludedApp() {
+                return Unmanaged.passRetained(event)
+            }
+
             // Check clipboard content type
             let pasteboard = NSPasteboard.general
 
             // Only intercept if clipboard contains purely text content
-            // Let native paste handle files, images, app-specific data (video editors, design tools, etc.)
+            // Let native paste handle files, images, app-specific data
             if !isPlainTextClipboard(pasteboard) {
                 return Unmanaged.passRetained(event)
             }
@@ -132,6 +138,37 @@ final class HotkeyManager {
     func requestAccessibilityPermission() {
         let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
         AXIsProcessTrustedWithOptions(options)
+    }
+
+    /// Apps where ClipStash should not intercept Cmd+V
+    /// These apps use internal clipboard formats that look like plain text
+    private static let excludedBundleIDs: Set<String> = [
+        // Video Editors
+        "com.lemon.lvoverseas",         // CapCut
+        "com.lemon.lvpro",              // CapCut (alternate)
+        "com.bytedance.capcut.mac",     // CapCut (alternate)
+        "com.apple.FinalCut",           // Final Cut Pro
+        "com.apple.iMovieApp",          // iMovie
+        "com.adobe.premiere",           // Adobe Premiere Pro
+        "com.adobe.AfterEffects",       // Adobe After Effects
+        "com.blackmagic-design.DaVinciResolve", // DaVinci Resolve
+        "com.sony.Vegas",               // Sony Vegas
+        "org.blender",                  // Blender
+        // Design Tools
+        "com.adobe.Photoshop",          // Adobe Photoshop
+        "com.adobe.illustrator",        // Adobe Illustrator
+        "com.figma.Desktop",            // Figma
+        "com.bohemiancoding.sketch3",   // Sketch
+        "com.apple.garageband10",       // GarageBand
+        "com.apple.logic10",            // Logic Pro
+    ]
+
+    /// Check if frontmost app should be excluded from ClipStash interception
+    private func isExcludedApp() -> Bool {
+        guard let bundleID = NSWorkspace.shared.frontmostApplication?.bundleIdentifier else {
+            return false
+        }
+        return Self.excludedBundleIDs.contains(bundleID)
     }
 
     /// Check if clipboard contains only standard text types (no app-specific data)
