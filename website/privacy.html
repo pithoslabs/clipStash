@@ -78,23 +78,28 @@
         <a href="index.html" class="back-link">← Back to ClipStash</a>
 
         <h1>Privacy Policy</h1>
-        <p class="updated">Last updated: January 2025</p>
+        <p class="updated">Last updated: May 2026</p>
 
         <p>ClipStash is built with privacy as a core principle. We believe your clipboard data is personal and should stay on your device.</p>
 
-        <h2>Data Collection</h2>
-        <p><strong>We do not collect any data.</strong> ClipStash operates entirely on your Mac with no network connections, no analytics, no tracking, and no telemetry.</p>
+        <h2>App Data Collection</h2>
+        <p><strong>The ClipStash app does not collect any data.</strong> ClipStash operates entirely on your Mac with no network connections, no analytics, no tracking, and no telemetry.</p>
+
+        <h2>Website Analytics</h2>
+        <p>The ClipStash website records basic page view and download events so we can understand site traffic and app downloads. These events may include the page path, download file name, browser user agent, referrer, approximate region from Vercel request headers, and timestamp.</p>
+        <p>Website analytics never include your clipboard content or app data. The app does not send telemetry to us.</p>
 
         <h2>What ClipStash Stores</h2>
-        <p>ClipStash stores your clipboard history locally on your Mac in the following location:</p>
+        <p>ClipStash stores your encrypted clipboard history locally on your Mac in the following location:</p>
         <ul>
-            <li><code>~/Library/Application Support/ClipStash/history.json</code></li>
+            <li><code>~/Library/Application Support/ClipStash/history.encrypted</code></li>
         </ul>
         <p>This data:</p>
         <ul>
             <li>Never leaves your device</li>
             <li>Is not synced to any cloud service</li>
             <li>Is not accessible to us or any third party</li>
+            <li>Is encrypted using AES-GCM with a key stored in macOS Keychain</li>
             <li>Is automatically deleted after 24 hours</li>
             <li>Can be manually cleared at any time</li>
         </ul>
@@ -107,10 +112,10 @@
         <p>We do not use these permissions to monitor your activity, capture keystrokes, or access any data beyond what's necessary for clipboard management.</p>
 
         <h2>Third-Party Services</h2>
-        <p>ClipStash does not use any third-party services, SDKs, or analytics tools. The app is completely self-contained.</p>
+        <p>The ClipStash app does not use any third-party services, SDKs, or analytics tools. The app is completely self-contained. The ClipStash website is hosted on Vercel, which processes website requests and download events.</p>
 
         <h2>Data Security</h2>
-        <p>Your clipboard history is stored as a plain JSON file on your local filesystem. It is protected by your Mac's standard file system permissions and any full-disk encryption you have enabled (FileVault).</p>
+        <p>Your clipboard history is encrypted before it is written to disk. The encryption key is stored in macOS Keychain and marked as available only on the current device while unlocked.</p>
         <p><strong>Sensitive Data:</strong> Be aware that ClipStash stores text you copy, which may include passwords or sensitive information. We recommend:</p>
         <ul>
             <li>Using a password manager that clears clipboard after use</li>
