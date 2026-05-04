@@ -9,10 +9,19 @@
 - [x] Auto-cleanup (24hr retention)
 - [x] Source app tracking
 - [x] Duplicate prevention
+- [x] Encrypted local storage
+- [x] Website download flow
+- [x] Basic website hit/download tracking
 
 ---
 
 ## Near Term
+
+### Open Source Readiness
+- [ ] Public issue triage labels
+- [ ] Release checklist
+- [ ] GitHub Releases distribution flow
+- [ ] Contributor-friendly signing/build notes
 
 ### Polish & Stability
 - [ ] Menu bar icon + preferences window
@@ -103,4 +112,4 @@ Automatically detect and protect:
 
 ---
 
-*Last updated: January 2025*
+*Last updated: May 2026*

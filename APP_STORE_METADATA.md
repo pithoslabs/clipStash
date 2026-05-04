@@ -38,7 +38,7 @@ Unlike other clipboard managers that require learning new shortcuts, ClipStash e
 
 **Privacy First**
 
-ClipStash stores your clipboard history locally in ~/Library/Application Support/ClipStash. Your data never leaves your device. We don't collect analytics, track usage, or phone home. Your clipboard is your business.
+ClipStash stores your clipboard history locally in encrypted storage at ~/Library/Application Support/ClipStash/history.encrypted, with the encryption key stored in macOS Keychain. Your data never leaves your device. We don't collect analytics, track usage, or phone home. Your clipboard is your business.
 
 **Requirements**
 
@@ -61,7 +61,7 @@ clipboard,history,paste,copy,manager,productivity,utility,cmd+v,snippets,text
 4+ (No objectionable content)
 
 ## Copyright
-© 2025 Pithos Labs
+© 2026 Pithos Labs
 
 ## Support URL
 https://github.com/pithoslabs/clipStash
@@ -133,4 +133,4 @@ To test:
 4. Press Cmd+V—you should see the ClipStash popup
 5. Press Enter or click an item to paste
 
-The app stores data locally at ~/Library/Application Support/ClipStash/history.json and does not make any network connections.
+The app stores encrypted data locally at ~/Library/Application Support/ClipStash/history.encrypted, keeps the encryption key in macOS Keychain, and does not make any network connections.

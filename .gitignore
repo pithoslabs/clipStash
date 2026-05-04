@@ -15,6 +15,8 @@ build/
 !default.perspectivev3
 *.hmap
 *.ipa
+*.app/
+*.dmg
 *.dSYM.zip
 *.dSYM
 
@@ -43,6 +45,10 @@ Dependencies/
 
 # IDE
 .idea/
+.claude/
 *.swp
 *~
-.vercel
+
+# Deployment
+.vercel/
+website/downloads/*.dmg
