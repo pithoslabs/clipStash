@@ -52,3 +52,6 @@ Dependencies/
 # Deployment
 .vercel/
 website/downloads/*.dmg
+
+# Local planning
+ROADMAP.md
