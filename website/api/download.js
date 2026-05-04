@@ -16,7 +16,11 @@ module.exports = function handler(req, res) {
   console.log(JSON.stringify(buildEvent(req)));
 
   res.statusCode = 302;
-  res.setHeader("Location", process.env.CLIPSTASH_DOWNLOAD_URL || "/downloads/ClipStash.dmg");
+  res.setHeader(
+    "Location",
+    process.env.CLIPSTASH_DOWNLOAD_URL ||
+      "https://github.com/pithoslabs/clipStash/releases/download/v1.0.0/ClipStash.dmg"
+  );
   res.setHeader("Cache-Control", "no-store");
   res.end();
 };

@@ -63,7 +63,7 @@ Official signed builds may be distributed separately by Pithos Labs. Code signin
 
 The static website lives in `website/` and includes lightweight Vercel API routes for page-view and download tracking.
 
-- Set `CLIPSTASH_DOWNLOAD_URL` in Vercel to point `/download` at an official signed build, such as a GitHub Release asset.
+- Set `CLIPSTASH_DOWNLOAD_URL` in Vercel to point `/download` at an official signed build, such as `https://github.com/pithoslabs/clipStash/releases/download/v1.0.0/ClipStash.dmg`.
 - Do not commit release binaries, `.vercel/`, signing credentials, or local deployment artifacts.
 - The app itself does not include analytics or telemetry.
 
