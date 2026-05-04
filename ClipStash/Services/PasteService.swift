@@ -9,13 +9,11 @@ final class PasteService {
 
     private init() {}
 
-    func paste() {
+    func paste(to application: NSRunningApplication? = nil) {
         let keyCodeV = CGKeyCode(kVK_ANSI_V)
-        print("[PasteService] Creating paste events with marker: \(PasteService.markerValue)")
 
         guard let keyDown = CGEvent(keyboardEventSource: nil, virtualKey: keyCodeV, keyDown: true),
               let keyUp = CGEvent(keyboardEventSource: nil, virtualKey: keyCodeV, keyDown: false) else {
-            print("[PasteService] ERROR: Failed to create events")
             return
         }
 
@@ -26,18 +24,19 @@ final class PasteService {
         keyDown.setIntegerValueField(.eventSourceUserData, value: PasteService.markerValue)
         keyUp.setIntegerValueField(.eventSourceUserData, value: PasteService.markerValue)
 
-        // Verify marker was set
-        let checkMarker = keyDown.getIntegerValueField(.eventSourceUserData)
-        print("[PasteService] Marker verification: \(checkMarker)")
-
-        print("[PasteService] Posting keyDown...")
-        keyDown.post(tap: .cghidEventTap)
+        post(keyDown, to: application)
 
         // Post keyUp after brief delay without blocking main thread
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.03) {
-            print("[PasteService] Posting keyUp...")
-            keyUp.post(tap: .cghidEventTap)
-            print("[PasteService] Done")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.03) { [application] in
+            self.post(keyUp, to: application)
+        }
+    }
+
+    private func post(_ event: CGEvent, to application: NSRunningApplication?) {
+        if let application {
+            event.postToPid(application.processIdentifier)
+        } else {
+            event.post(tap: .cghidEventTap)
         }
     }
 }

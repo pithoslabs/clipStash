@@ -2,7 +2,8 @@ import AppKit
 import Carbon.HIToolbox
 
 final class HotkeyManager {
-    static let shared = HotkeyManager()
+    nonisolated(unsafe) static let shared = HotkeyManager()
+    static let enableRemoteDesktopPasteKey = "enableRemoteDesktopPaste"
 
     private var eventTap: CFMachPort?
     private var runLoopSource: CFRunLoopSource?
@@ -108,9 +109,9 @@ final class HotkeyManager {
                 return Unmanaged.passRetained(event)
             }
 
-            // Check if frontmost app is excluded (video editors, design tools)
+            // Check if frontmost app is excluded. Remote desktop apps are opt-in.
             if let bundleID = NSWorkspace.shared.frontmostApplication?.bundleIdentifier,
-               Self.excludedBundleIDs.contains(bundleID) {
+               Self.shouldPassThroughPaste(for: bundleID) {
                 return Unmanaged.passRetained(event)
             }
 
@@ -144,8 +145,38 @@ final class HotkeyManager {
         AXIsProcessTrustedWithOptions(options)
     }
 
-    /// Apps where ClipStash should not intercept Cmd+V
-    /// These apps use internal clipboard formats that look like plain text
+    static func isRemoteDesktopBundleID(_ bundleID: String?) -> Bool {
+        guard let bundleID else { return false }
+        return remoteDesktopBundleIDs.contains(bundleID)
+    }
+
+    private static func shouldPassThroughPaste(for bundleID: String) -> Bool {
+        if remoteDesktopBundleIDs.contains(bundleID) {
+            return !UserDefaults.standard.bool(forKey: enableRemoteDesktopPasteKey)
+        }
+
+        return excludedBundleIDs.contains(bundleID)
+    }
+
+    /// Remote desktop apps need native paste forwarding by default.
+    /// Users can opt in when they want ClipStash history from this Mac pasted into the remote session.
+    private static let remoteDesktopBundleIDs: Set<String> = [
+        "com.apple.ScreenSharing",      // Apple Screen Sharing
+        "com.microsoft.rdc.macos",      // Microsoft Remote Desktop
+        "com.microsoft.rdc.mac",        // Microsoft Remote Desktop (legacy)
+        "com.teamviewer.TeamViewer",    // TeamViewer
+        "com.teamviewer.TeamViewerHost", // TeamViewer Host
+        "com.philandro.anydesk",        // AnyDesk
+        "com.realvnc.vncviewer",        // RealVNC Viewer
+        "com.edovia.screens.mac",       // Screens
+        "com.p5sys.jump.mac.viewer",    // Jump Desktop
+        "tv.parsec.www",                // Parsec
+        "com.carriez.RustDesk",         // RustDesk
+        "com.google.ChromeRemoteDesktop", // Chrome Remote Desktop
+    ]
+
+    /// Apps where ClipStash should not intercept Cmd+V.
+    /// Some apps use internal clipboard formats that look like plain text.
     private static let excludedBundleIDs: Set<String> = [
         // Video Editors
         "com.lemon.lvoverseas",         // CapCut
