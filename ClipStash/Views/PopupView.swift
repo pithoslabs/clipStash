@@ -81,7 +81,8 @@ struct PopupView: View {
                                 ClipboardItemRow(
                                     item: item,
                                     index: index,
-                                    isSelected: index == state.selectedIndex
+                                    isSelected: index == state.selectedIndex,
+                                    isHovered: index == state.hoveredIndex
                                 )
                                 .id(index)
                                 .onHover { hovering in

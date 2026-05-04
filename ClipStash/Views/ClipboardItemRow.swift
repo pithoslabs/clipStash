@@ -4,7 +4,12 @@ struct ClipboardItemRow: View {
     let item: ClipboardItem
     let index: Int
     let isSelected: Bool
+    let isHovered: Bool
     @Environment(\.colorScheme) var colorScheme
+
+    private var isActive: Bool {
+        isSelected || isHovered
+    }
 
     var body: some View {
         HStack(spacing: 14) {
@@ -15,7 +20,7 @@ struct ClipboardItemRow: View {
                 .frame(width: 24, height: 24)
                 .background(
                     Circle()
-                        .fill(isSelected ? Color.accentColor : Color.primary.opacity(0.08))
+                        .fill(isSelected ? Color.accentColor : Color.primary.opacity(isHovered ? 0.12 : 0.08))
                 )
 
             VStack(alignment: .leading, spacing: 4) {
@@ -41,8 +46,8 @@ struct ClipboardItemRow: View {
 
             Spacer()
 
-            // Paste hint on selected item
-            if isSelected {
+            // Paste hint on active item
+            if isActive {
                 Image(systemName: "return")
                     .font(.system(size: 12, weight: .medium))
                     .foregroundStyle(.tertiary)
@@ -53,14 +58,36 @@ struct ClipboardItemRow: View {
         .padding(.vertical, 10)
         .background(
             RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .fill(isSelected ?
-                    Color.accentColor.opacity(colorScheme == .dark ? 0.25 : 0.15) :
-                    Color.clear)
+                .fill(backgroundColor)
         )
         .overlay(
             RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .strokeBorder(isSelected ? Color.accentColor.opacity(0.3) : Color.clear, lineWidth: 1)
+                .strokeBorder(borderColor, lineWidth: 1)
         )
         .contentShape(Rectangle())
+    }
+
+    private var backgroundColor: Color {
+        if isSelected {
+            return Color.accentColor.opacity(colorScheme == .dark ? 0.25 : 0.15)
+        }
+
+        if isHovered {
+            return Color.primary.opacity(colorScheme == .dark ? 0.12 : 0.06)
+        }
+
+        return Color.clear
+    }
+
+    private var borderColor: Color {
+        if isSelected {
+            return Color.accentColor.opacity(0.3)
+        }
+
+        if isHovered {
+            return Color.primary.opacity(colorScheme == .dark ? 0.16 : 0.08)
+        }
+
+        return Color.clear
     }
 }
