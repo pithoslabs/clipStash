@@ -41,7 +41,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // Start hotkey listening
         if !HotkeyManager.shared.start() {
             // Accessibility permission not granted, will be prompted
-            print("Waiting for accessibility permission...")
             startPermissionPolling()
         }
     }
@@ -58,13 +57,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
             if HotkeyManager.shared.checkAccessibilityPermission() {
                 self.stopPermissionPolling()
-                if HotkeyManager.shared.start() {
-                    print("Hotkey manager started successfully")
-                }
+                _ = HotkeyManager.shared.start()
             } else if self.permissionPollCount >= self.maxPermissionPolls {
                 // Stop polling after max attempts to save resources
                 self.stopPermissionPolling()
-                print("Stopped polling for accessibility permission after \(self.maxPermissionPolls) attempts")
             }
         }
     }

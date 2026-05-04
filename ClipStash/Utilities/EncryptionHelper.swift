@@ -5,8 +5,10 @@ import Security
 /// Handles encryption/decryption of clipboard history using AES-GCM with a Keychain-stored key
 enum EncryptionHelper {
 
-    private static let keychainService = "com.clipstash.encryption"
+    private static let keychainService = "com.pithoslabs.ClipStash.encryption"
+    private static let legacyKeychainService = "com.clipstash.encryption"
     private static let keychainAccount = "history-key"
+    private static var cachedKey: SymmetricKey?
 
     // MARK: - Public API
 
@@ -30,19 +32,38 @@ enum EncryptionHelper {
     // MARK: - Key Management
 
     private static func getOrCreateKey() throws -> SymmetricKey {
+        if let cachedKey {
+            return cachedKey
+        }
+
         if let existingKey = try loadKeyFromKeychain() {
+            cachedKey = existingKey
             return existingKey
         }
 
         let newKey = SymmetricKey(size: .bits256)
         try saveKeyToKeychain(newKey)
+        cachedKey = newKey
         return newKey
     }
 
     private static func loadKeyFromKeychain() throws -> SymmetricKey? {
+        if let key = try loadKeyFromKeychain(service: keychainService) {
+            return key
+        }
+
+        if let legacyKey = try loadKeyFromKeychain(service: legacyKeychainService) {
+            try saveKeyToKeychain(legacyKey)
+            return legacyKey
+        }
+
+        return nil
+    }
+
+    private static func loadKeyFromKeychain(service: String) throws -> SymmetricKey? {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: keychainService,
+            kSecAttrService as String: service,
             kSecAttrAccount as String: keychainAccount,
             kSecReturnData as String: true,
             kSecMatchLimit as String: kSecMatchLimitOne
