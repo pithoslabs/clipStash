@@ -157,7 +157,7 @@ final class PopupWindowController {
 
             // Target app is now active - paste and clean up
             self?.cleanupActivationObserver()
-            PasteService.shared.paste()
+            self?.paste(into: targetApp)
         }
 
         // Set up timeout in case activation notification never fires
@@ -167,7 +167,7 @@ final class PopupWindowController {
             // Timeout reached - check if app is frontmost and paste anyway
             self?.cleanupActivationObserver()
             if NSWorkspace.shared.frontmostApplication?.processIdentifier == targetApp.processIdentifier {
-                PasteService.shared.paste()
+                self?.paste(into: targetApp)
             }
         }
         activationTimeoutTask = timeoutTask
@@ -175,6 +175,14 @@ final class PopupWindowController {
 
         // Request activation
         targetApp.activate()
+    }
+
+    private func paste(into targetApp: NSRunningApplication) {
+        if HotkeyManager.isRemoteDesktopBundleID(targetApp.bundleIdentifier) {
+            PasteService.shared.paste(to: targetApp)
+        } else {
+            PasteService.shared.paste()
+        }
     }
 
     private func cleanupActivationObserver() {
