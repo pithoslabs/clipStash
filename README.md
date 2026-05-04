@@ -1,3 +1,5 @@
+![ClipStash hero](docs/readme-hero.png)
+
 # ClipStash
 
 ClipStash is a native macOS clipboard history manager. Press `Cmd+V` to open your recent clipboard items, search or navigate with the keyboard, and paste the selected item into the app you were using.
