@@ -140,7 +140,7 @@ final class HistoryStore: ObservableObject {
             items = try JSONDecoder().decode([ClipboardItem].self, from: jsonData)
             updateHasItems()
         } catch {
-            print("Failed to load history: \(error)")
+            saveError = error
         }
     }
 
