@@ -138,6 +138,7 @@ struct PopupView: View {
         .frame(width: 420, height: calculatedHeight)
         .background(LiquidGlassBackground())
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         .shadow(color: .black.opacity(0.25), radius: 30, x: 0, y: 15)
         .overlay(
             RoundedRectangle(cornerRadius: 16, style: .continuous)
@@ -226,6 +227,8 @@ struct LiquidGlassBackground: NSViewRepresentable {
         view.state = .active
         view.wantsLayer = true
         view.layer?.cornerRadius = 16
+        view.layer?.cornerCurve = .continuous
+        view.layer?.masksToBounds = true
         return view
     }
 

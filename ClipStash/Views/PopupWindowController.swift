@@ -58,10 +58,12 @@ final class PopupWindowController {
         popupView = view
 
         let hostingView = FirstMouseHostingView(rootView: view)
+        hostingView.wantsLayer = true
+        hostingView.layer?.backgroundColor = NSColor.clear.cgColor
         self.hostingView = hostingView
 
         let window = KeyableWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 400, height: 350),
+            contentRect: NSRect(x: 0, y: 0, width: 420, height: 350),
             styleMask: [.borderless],
             backing: .buffered,
             defer: false
@@ -71,7 +73,7 @@ final class PopupWindowController {
         window.isOpaque = false
         window.backgroundColor = .clear
         window.level = .floating
-        window.hasShadow = true
+        window.hasShadow = false
         window.isMovableByWindowBackground = false
 
         // Center on screen containing mouse cursor (or main screen as fallback)
