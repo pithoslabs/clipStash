@@ -19,7 +19,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let maxPermissionPolls = 300  // Stop polling after 5 minutes (300 * 1 second)
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        setupApp()
+        if OnboardingWindowController.shared.shouldShow {
+            OnboardingWindowController.shared.onFinish = { [weak self] in
+                self?.setupApp()
+            }
+            OnboardingWindowController.shared.show()
+        } else {
+            setupApp()
+        }
     }
 
     private func setupApp() {
