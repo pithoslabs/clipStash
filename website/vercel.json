@@ -5,17 +5,21 @@
       "destination": "/api/download"
     },
     {
+      "source": "/ClipStash.zip",
+      "destination": "/api/download"
+    },
+    {
       "source": "/ClipStash.dmg",
       "destination": "/api/download"
     }
   ],
   "headers": [
     {
-      "source": "/downloads/ClipStash.dmg",
+      "source": "/downloads/ClipStash-v2.1.0.zip",
       "headers": [
         {
           "key": "Content-Disposition",
-          "value": "attachment; filename=\"ClipStash.dmg\""
+          "value": "attachment; filename=\"ClipStash-v2.1.0.zip\""
         },
         {
           "key": "Cache-Control",

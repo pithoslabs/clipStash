@@ -1,7 +1,7 @@
 function buildEvent(req) {
   return {
     event: "download",
-    file: "ClipStash.dmg",
+    file: "ClipStash-v2.1.0.zip",
     timestamp: new Date().toISOString(),
     host: req.headers.host || null,
     referrer: req.headers.referer || null,
@@ -19,7 +19,7 @@ module.exports = function handler(req, res) {
   res.setHeader(
     "Location",
     process.env.CLIPSTASH_DOWNLOAD_URL ||
-      "https://github.com/pithoslabs/clipStash/releases/download/v1.0.0/ClipStash.dmg"
+      "https://github.com/pithoslabs/clipStash/releases/download/v2.1.0/ClipStash-v2.1.0.zip"
   );
   res.setHeader("Cache-Control", "no-store");
   res.end();
