@@ -19,6 +19,7 @@ final class OnboardingWindowController: NSObject, NSWindowDelegate {
 
     func showIfNeeded() {
         guard shouldShow else { return }
+
         show()
     }
 
@@ -127,12 +128,18 @@ struct OnboardingView: View {
     let onDone: () -> Void
 
     @State private var page = 0
+    @State private var isAccessibilityEnabled = AccessibilityHelper.isAccessibilityEnabled
 
     private let pageCount = 3
+    private let permissionRefreshTimer = Timer.publish(every: 0.8, on: .main, in: .common).autoconnect()
     private let background = Color(red: 253 / 255, green: 251 / 255, blue: 247 / 255)
     private let slateDeep = Color(red: 74 / 255, green: 85 / 255, blue: 104 / 255)
     private let slateMid = Color(red: 133 / 255, green: 146 / 255, blue: 158 / 255)
     private let gold = Color(red: 201 / 255, green: 168 / 255, blue: 97 / 255)
+
+    private var canFinish: Bool {
+        page < pageCount - 1 || isAccessibilityEnabled
+    }
 
     var body: some View {
         ZStack {
@@ -160,6 +167,7 @@ struct OnboardingView: View {
                         .transition(.opacity.combined(with: .move(edge: .trailing)))
                     default:
                         PermissionsOnboardingPage(
+                            isAccessibilityEnabled: $isAccessibilityEnabled,
                             slateDeep: slateDeep,
                             slateMid: slateMid,
                             gold: gold
@@ -171,28 +179,57 @@ struct OnboardingView: View {
                 .animation(.spring(response: 0.35, dampingFraction: 0.9), value: page)
 
                 HStack {
-                    Button {
-                        onQuit()
-                    } label: {
-                        Label("Quit", systemImage: "power")
-                            .font(.system(size: 13, weight: .semibold))
-                            .frame(width: 86, height: 34)
+                    HStack(spacing: 10) {
+                        Button {
+                            onQuit()
+                        } label: {
+                            Label("Quit", systemImage: "power")
+                                .font(.system(size: 13, weight: .semibold))
+                                .frame(width: 86, height: 34)
+                                .contentShape(Capsule())
+                                .background(
+                                    Capsule()
+                                        .fill(Color.white.opacity(0.58))
+                                        .overlay(Capsule().strokeBorder(Color.white.opacity(0.82), lineWidth: 1))
+                                )
+                        }
+                        .buttonStyle(.plain)
+                        .foregroundStyle(slateMid)
+
+                        Button {
+                            withAnimation(.spring(response: 0.35, dampingFraction: 0.9)) {
+                                page = max(page - 1, 0)
+                            }
+                        } label: {
+                            Label("Back", systemImage: "chevron.left")
+                                .font(.system(size: 13, weight: .semibold))
+                                .frame(width: 88, height: 34)
+                                .contentShape(Capsule())
+                                .background(
+                                    Capsule()
+                                        .fill(Color.white.opacity(page == 0 ? 0.34 : 0.58))
+                                        .overlay(Capsule().strokeBorder(Color.white.opacity(0.82), lineWidth: 1))
+                                )
+                        }
+                        .buttonStyle(.plain)
+                        .foregroundStyle(page == 0 ? slateMid.opacity(0.42) : slateMid)
+                        .disabled(page == 0)
                     }
-                    .buttonStyle(.plain)
-                    .foregroundStyle(slateMid)
-                    .background(
-                        Capsule()
-                            .fill(Color.white.opacity(0.58))
-                            .overlay(Capsule().strokeBorder(Color.white.opacity(0.82), lineWidth: 1))
-                    )
+                    .frame(width: 190, alignment: .leading)
 
                     Spacer()
 
-                    PageDots(page: page, count: pageCount, activeColor: slateDeep)
+                    PageDots(page: page, count: pageCount, activeColor: slateDeep) { selectedPage in
+                        withAnimation(.spring(response: 0.35, dampingFraction: 0.9)) {
+                            page = selectedPage
+                        }
+                    }
 
                     Spacer()
 
                     Button {
+                        guard canFinish else { return }
+
                         if page < pageCount - 1 {
                             withAnimation(.spring(response: 0.35, dampingFraction: 0.9)) {
                                 page += 1
@@ -204,30 +241,39 @@ struct OnboardingView: View {
                         Text(page < pageCount - 1 ? "Continue" : "Done")
                             .font(.system(size: 14, weight: .semibold))
                             .frame(width: 96, height: 36)
+                            .contentShape(Capsule())
+                            .background(
+                                Capsule()
+                                    .fill(canFinish ? slateDeep : Color.white.opacity(0.62))
+                                    .overlay(Capsule().strokeBorder(Color.white.opacity(canFinish ? 0 : 0.88), lineWidth: 1))
+                                    .shadow(color: slateDeep.opacity(canFinish ? 0.22 : 0.06), radius: 14, x: 0, y: 8)
+                            )
                     }
                     .buttonStyle(.plain)
-                    .foregroundStyle(.white)
-                    .background(
-                        Capsule()
-                            .fill(slateDeep)
-                            .shadow(color: slateDeep.opacity(0.22), radius: 14, x: 0, y: 8)
-                    )
+                    .foregroundStyle(canFinish ? .white : slateMid.opacity(0.78))
+                    .disabled(!canFinish)
+                    .frame(width: 190, alignment: .trailing)
                 }
                 .padding(.horizontal, 28)
                 .padding(.bottom, 46)
             }
         }
         .frame(width: 806, height: 650)
+        .onAppear {
+            isAccessibilityEnabled = AccessibilityHelper.isAccessibilityEnabled
+        }
+        .onReceive(permissionRefreshTimer) { _ in
+            isAccessibilityEnabled = AccessibilityHelper.isAccessibilityEnabled
+        }
     }
 }
 
 private struct PermissionsOnboardingPage: View {
+    @Binding var isAccessibilityEnabled: Bool
+
     let slateDeep: Color
     let slateMid: Color
     let gold: Color
-
-    @State private var isAccessibilityEnabled = AccessibilityHelper.isAccessibilityEnabled
-    private let permissionRefreshTimer = Timer.publish(every: 0.8, on: .main, in: .common).autoconnect()
 
     private var titleText: String {
         isAccessibilityEnabled ? "You're all set" : "Grant permissions"
@@ -316,9 +362,6 @@ private struct PermissionsOnboardingPage: View {
         }
         .padding(.horizontal, 64)
         .onAppear {
-            isAccessibilityEnabled = AccessibilityHelper.isAccessibilityEnabled
-        }
-        .onReceive(permissionRefreshTimer) { _ in
             isAccessibilityEnabled = AccessibilityHelper.isAccessibilityEnabled
         }
     }
@@ -641,14 +684,21 @@ private struct PageDots: View {
     let page: Int
     let count: Int
     let activeColor: Color
+    var onSelect: ((Int) -> Void)? = nil
 
     var body: some View {
         HStack(spacing: 7) {
             ForEach(0..<count, id: \.self) { index in
-                Capsule()
-                    .fill(index == page ? activeColor : activeColor.opacity(0.2))
-                    .frame(width: index == page ? 18 : 7, height: 7)
-                    .animation(.spring(response: 0.3, dampingFraction: 0.85), value: page)
+                Button {
+                    onSelect?(index)
+                } label: {
+                    Capsule()
+                        .fill(index == page ? activeColor : activeColor.opacity(0.2))
+                        .frame(width: index == page ? 18 : 7, height: 7)
+                        .contentShape(Rectangle())
+                        .animation(.spring(response: 0.3, dampingFraction: 0.85), value: page)
+                }
+                .buttonStyle(.plain)
             }
         }
     }
