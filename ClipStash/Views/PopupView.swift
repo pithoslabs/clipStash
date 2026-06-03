@@ -82,7 +82,13 @@ struct PopupView: View {
                                     item: item,
                                     index: index,
                                     isSelected: index == state.selectedIndex,
-                                    isHovered: index == state.hoveredIndex
+                                    isHovered: index == state.hoveredIndex,
+                                    onSelect: {
+                                        selectItem(item)
+                                    },
+                                    onToggleStarred: {
+                                        toggleStarred(item)
+                                    }
                                 )
                                 .id(index)
                                 .onHover { hovering in
@@ -154,14 +160,13 @@ struct PopupView: View {
         state.onItemSelected?(item)
     }
 
-    func handleMouseDown(_ event: NSEvent) -> Bool {
-        // If mouse is hovering over an item, select it
-        if let hoveredIndex = state.hoveredIndex,
-           hoveredIndex < filteredItems.count {
-            selectItem(filteredItems[hoveredIndex])
-            return true
+    private func toggleStarred(_ item: ClipboardItem) {
+        let itemID = item.id
+        historyStore.toggleStarred(item)
+
+        if let newIndex = filteredItems.firstIndex(where: { $0.id == itemID }) {
+            state.selectedIndex = newIndex
         }
-        return false
     }
 
     func handleKeyDown(_ event: NSEvent) -> Bool {
@@ -200,6 +205,13 @@ struct PopupView: View {
         default:
             // Check for Cmd+1 through Cmd+9 using key codes (layout-independent)
             if event.modifierFlags.contains(.command) {
+                if keyCode == kVK_ANSI_S,
+                   !filteredItems.isEmpty,
+                   state.selectedIndex < filteredItems.count {
+                    toggleStarred(filteredItems[state.selectedIndex])
+                    return true
+                }
+
                 let numberKeyCodes: [Int: Int] = [
                     kVK_ANSI_1: 1, kVK_ANSI_2: 2, kVK_ANSI_3: 3,
                     kVK_ANSI_4: 4, kVK_ANSI_5: 5, kVK_ANSI_6: 6,

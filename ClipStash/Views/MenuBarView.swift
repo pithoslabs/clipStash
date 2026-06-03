@@ -84,7 +84,7 @@ struct MenuBarView: View {
                         ForEach(historyStore.items) { item in
                             Button(action: {
                                 // Copy to clipboard (user can then paste manually)
-                                ClipboardMonitor.shared.setContent(item.content)
+                                ClipboardMonitor.shared.setContent(item)
                             }) {
                                 MenuHistoryRow(
                                     item: item,

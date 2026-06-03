@@ -19,7 +19,6 @@ final class PopupWindowController {
     private var popupView: PopupView?
     private var hostingView: NSHostingView<PopupView>?
     private var eventMonitor: Any?
-    private var mouseMonitor: Any?
     private var globalClickMonitor: Any?
     private var previousApp: NSRunningApplication?
     private var activationObserver: Any?
@@ -99,14 +98,6 @@ final class PopupWindowController {
             return event
         }
 
-        // Monitor for mouse clicks on items
-        mouseMonitor = NSEvent.addLocalMonitorForEvents(matching: .leftMouseDown) { [weak self] event in
-            if self?.popupView?.handleMouseDown(event) == true {
-                return nil
-            }
-            return event
-        }
-
         // Monitor for clicks outside
         globalClickMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] _ in
             self?.dismiss()
@@ -117,11 +108,6 @@ final class PopupWindowController {
         if let monitor = eventMonitor {
             NSEvent.removeMonitor(monitor)
             eventMonitor = nil
-        }
-
-        if let monitor = mouseMonitor {
-            NSEvent.removeMonitor(monitor)
-            mouseMonitor = nil
         }
 
         if let monitor = globalClickMonitor {
@@ -137,7 +123,7 @@ final class PopupWindowController {
 
     private func handleItemSelected(_ item: ClipboardItem) {
         // Always set clipboard content first
-        ClipboardMonitor.shared.setContent(item.content)
+        ClipboardMonitor.shared.setContent(item)
 
         // Dismiss popup
         dismiss()

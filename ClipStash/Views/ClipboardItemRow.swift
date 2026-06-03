@@ -5,6 +5,8 @@ struct ClipboardItemRow: View {
     let index: Int
     let isSelected: Bool
     let isHovered: Bool
+    let onSelect: () -> Void
+    let onToggleStarred: () -> Void
     @Environment(\.colorScheme) var colorScheme
 
     private var isActive: Bool {
@@ -12,47 +14,60 @@ struct ClipboardItemRow: View {
     }
 
     var body: some View {
-        HStack(spacing: 14) {
-            // Quick select number with Liquid Glass pill
-            Text("\(index + 1)")
-                .font(.system(size: 12, weight: .semibold, design: .rounded))
-                .foregroundStyle(isSelected ? .white : .secondary)
-                .frame(width: 24, height: 24)
-                .background(
-                    Circle()
-                        .fill(isSelected ? Color.accentColor : Color.primary.opacity(isHovered ? 0.12 : 0.08))
-                )
+        HStack(spacing: 8) {
+            HStack(spacing: 14) {
+                // Quick select number with Liquid Glass pill
+                Text("\(index + 1)")
+                    .font(.system(size: 12, weight: .semibold, design: .rounded))
+                    .foregroundStyle(isSelected ? .white : .secondary)
+                    .frame(width: 24, height: 24)
+                    .background(
+                        Circle()
+                            .fill(isSelected ? Color.accentColor : Color.primary.opacity(isHovered ? 0.12 : 0.08))
+                    )
 
-            VStack(alignment: .leading, spacing: 4) {
-                Text(item.preview)
-                    .font(.system(size: 14))
-                    .foregroundStyle(.primary)
-                    .lineLimit(2)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(item.preview)
+                        .font(.system(size: 14))
+                        .foregroundStyle(.primary)
+                        .lineLimit(2)
 
-                HStack(spacing: 6) {
-                    Text(item.timeAgo)
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(.tertiary)
-
-                    if let app = item.sourceApp {
-                        Text("•")
-                            .foregroundStyle(.quaternary)
-                        Text(app)
+                    HStack(spacing: 6) {
+                        Text(item.timeAgo)
                             .font(.system(size: 11, weight: .medium))
                             .foregroundStyle(.tertiary)
+
+                        if let app = item.sourceApp {
+                            Text("•")
+                                .foregroundStyle(.quaternary)
+                            Text(app)
+                                .font(.system(size: 11, weight: .medium))
+                                .foregroundStyle(.tertiary)
+                        }
                     }
                 }
-            }
 
-            Spacer()
+                Spacer()
 
-            // Paste hint on active item
-            if isActive {
-                Image(systemName: "return")
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(.tertiary)
-                    .padding(.trailing, 4)
+                // Paste hint on active item
+                if isActive {
+                    Image(systemName: "return")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(.tertiary)
+                }
             }
+            .contentShape(Rectangle())
+            .onTapGesture(perform: onSelect)
+
+            Button(action: onToggleStarred) {
+                Image(systemName: item.isStarred ? "star.fill" : "star")
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(item.isStarred ? Color.yellow : Color.secondary.opacity(isActive ? 0.85 : 0.55))
+                    .frame(width: 24, height: 24)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .help(item.isStarred ? "Unstar" : "Star")
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 10)
