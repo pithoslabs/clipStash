@@ -5,11 +5,13 @@ struct MenuBarView: View {
     @State private var isAccessibilityEnabled = AccessibilityHelper.isAccessibilityEnabled
     @State private var hoveredItemID: UUID?
     @State private var hoveredMenuItem: MenuHoverTarget?
+    @AppStorage(HotkeyManager.commandVShortcutEnabledKey) private var isCommandVShortcutEnabled = true
     @AppStorage(HotkeyManager.enableRemoteDesktopPasteKey) private var enableRemoteDesktopPaste = false
+    private let permissionRefreshTimer = Timer.publish(every: 1.0, on: .main, in: .common).autoconnect()
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            if !isAccessibilityEnabled {
+            if isCommandVShortcutEnabled && !isAccessibilityEnabled {
                 VStack(spacing: 8) {
                     Image(systemName: "exclamationmark.triangle.fill")
                         .foregroundColor(.yellow)
@@ -112,6 +114,22 @@ struct MenuBarView: View {
                 .padding(.horizontal, 10)
                 .padding(.vertical, 5)
 
+            Toggle(isOn: $isCommandVShortcutEnabled) {
+                MenuToggleRow(
+                    title: "Command V Shortcut",
+                    subtitle: "Show history when you paste",
+                    systemImage: "keyboard",
+                    isHovered: hoveredMenuItem == .commandVToggle
+                )
+            }
+            .toggleStyle(.switch)
+            .controlSize(.small)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 2)
+            .onHover { hovering in
+                hoveredMenuItem = hovering ? .commandVToggle : nil
+            }
+
             Toggle(isOn: $enableRemoteDesktopPaste) {
                 MenuToggleRow(
                     title: "Use in Screen Sharing",
@@ -169,12 +187,50 @@ struct MenuBarView: View {
         .padding(.bottom, 6)
         .frame(width: 260)
         .onAppear {
-            isAccessibilityEnabled = AccessibilityHelper.isAccessibilityEnabled
+            refreshAccessibilityState()
+            startShortcutIfReady()
+        }
+        .onChange(of: isCommandVShortcutEnabled) { _, _ in
+            applyCommandVShortcutPreference()
+        }
+        .onReceive(permissionRefreshTimer) { _ in
+            refreshAccessibilityState()
+            startShortcutIfReady()
+        }
+    }
+
+    private func refreshAccessibilityState() {
+        isAccessibilityEnabled = AccessibilityHelper.isAccessibilityEnabled
+    }
+
+    private func startShortcutIfReady() {
+        guard isCommandVShortcutEnabled,
+              isAccessibilityEnabled,
+              !HotkeyManager.shared.isRunning else {
+            return
+        }
+
+        _ = HotkeyManager.shared.start()
+    }
+
+    private func applyCommandVShortcutPreference() {
+        refreshAccessibilityState()
+
+        if let appDelegate = NSApp.delegate as? AppDelegate {
+            appDelegate.reconcileHotkeyPreference()
+        } else {
+            if isCommandVShortcutEnabled {
+                _ = HotkeyManager.shared.start()
+            } else {
+                HotkeyManager.shared.stop()
+                PopupWindowController.shared.dismiss()
+            }
         }
     }
 }
 
 private enum MenuHoverTarget {
+    case commandVToggle
     case remoteDesktopToggle
     case clearHistory
     case quit
