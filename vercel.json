@@ -11,6 +11,10 @@
     {
       "source": "/ClipStash.dmg",
       "destination": "/api/download"
+    },
+    {
+      "source": "/changelog",
+      "destination": "/changelog.html"
     }
   ],
   "headers": [
