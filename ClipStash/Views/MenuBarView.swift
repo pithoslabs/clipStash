@@ -65,7 +65,7 @@ struct MenuBarView: View {
                 Divider()
             }
 
-            // Recent items preview
+            // Clipboard items preview
             if historyStore.items.isEmpty {
                 Text("No clipboard history")
                     .font(.system(size: 12, weight: .medium))
@@ -74,7 +74,7 @@ struct MenuBarView: View {
                     .padding(.bottom, 14)
                     .frame(maxWidth: .infinity)
             } else {
-                Text("Recent (\(historyStore.items.count) items)")
+                Text("Clips & Recent (\(historyStore.items.count) \(historyStore.items.count == 1 ? "item" : "items"))")
                     .font(.system(size: 11, weight: .medium))
                     .foregroundColor(.secondary)
                     .padding(.horizontal, 12)
@@ -84,16 +84,17 @@ struct MenuBarView: View {
                 ScrollView {
                     LazyVStack(spacing: 2) {
                         ForEach(historyStore.items) { item in
-                            Button(action: {
-                                // Copy to clipboard (user can then paste manually)
-                                ClipboardMonitor.shared.setContent(item)
-                            }) {
-                                MenuHistoryRow(
-                                    item: item,
-                                    isHovered: hoveredItemID == item.id
-                                )
-                            }
-                            .buttonStyle(.plain)
+                            MenuHistoryRow(
+                                item: item,
+                                isHovered: hoveredItemID == item.id,
+                                onCopy: {
+                                    // Copy to clipboard (user can then paste manually)
+                                    ClipboardMonitor.shared.setContent(item)
+                                },
+                                onToggleClipped: {
+                                    toggleClipped(item)
+                                }
+                            )
                             .onHover { hovering in
                                 hoveredItemID = hovering ? item.id : nil
                             }
@@ -227,6 +228,10 @@ struct MenuBarView: View {
             }
         }
     }
+
+    private func toggleClipped(_ item: ClipboardItem) {
+        historyStore.toggleStarred(item)
+    }
 }
 
 private enum MenuHoverTarget {
@@ -273,21 +278,41 @@ private struct MenuToggleRow: View {
 private struct MenuHistoryRow: View {
     let item: ClipboardItem
     let isHovered: Bool
+    let onCopy: () -> Void
+    let onToggleClipped: () -> Void
 
     var body: some View {
         HStack(spacing: 8) {
-            Text(item.preview)
-                .lineLimit(1)
-                .font(.system(size: 12))
-                .foregroundColor(.primary)
+            Button(action: onCopy) {
+                HStack(spacing: 8) {
+                    Text(item.preview)
+                        .lineLimit(1)
+                        .font(.system(size: 12))
+                        .foregroundColor(.primary)
 
-            Spacer(minLength: 8)
+                    Spacer(minLength: 8)
 
-            if isHovered {
-                Image(systemName: "doc.on.clipboard")
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundColor(.secondary)
+                    Image(systemName: "doc.on.clipboard")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundColor(.secondary)
+                        .opacity(isHovered ? 1 : 0)
+                }
+                .contentShape(Rectangle())
             }
+            .buttonStyle(.plain)
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+            Button(action: onToggleClipped) {
+                Image(systemName: item.isStarred ? "paperclip.circle.fill" : "paperclip.circle")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(item.isStarred ? .accentColor : .secondary)
+                    .frame(width: 24, height: 24)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .opacity(item.isStarred || isHovered ? 1 : 0.55)
+            .help(item.isStarred ? "Unclip" : "Clip")
+            .accessibilityLabel(item.isStarred ? "Unclip item" : "Clip item")
         }
         .padding(.horizontal, 8)
         .frame(height: 28)
