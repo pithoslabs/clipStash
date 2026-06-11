@@ -129,6 +129,7 @@ struct OnboardingView: View {
 
     @State private var page = 0
     @State private var isAccessibilityEnabled = AccessibilityHelper.isAccessibilityEnabled
+    @AppStorage(HotkeyManager.commandVShortcutEnabledKey) private var isCommandVShortcutEnabled = true
 
     private let pageCount = 3
     private let permissionRefreshTimer = Timer.publish(every: 0.8, on: .main, in: .common).autoconnect()
@@ -138,7 +139,7 @@ struct OnboardingView: View {
     private let gold = Color(red: 201 / 255, green: 168 / 255, blue: 97 / 255)
 
     private var canFinish: Bool {
-        page < pageCount - 1 || isAccessibilityEnabled
+        page < pageCount - 1 || !isCommandVShortcutEnabled || isAccessibilityEnabled
     }
 
     var body: some View {
@@ -168,6 +169,7 @@ struct OnboardingView: View {
                     default:
                         PermissionsOnboardingPage(
                             isAccessibilityEnabled: $isAccessibilityEnabled,
+                            isCommandVShortcutEnabled: $isCommandVShortcutEnabled,
                             slateDeep: slateDeep,
                             slateMid: slateMid,
                             gold: gold
@@ -270,21 +272,34 @@ struct OnboardingView: View {
 
 private struct PermissionsOnboardingPage: View {
     @Binding var isAccessibilityEnabled: Bool
+    @Binding var isCommandVShortcutEnabled: Bool
 
     let slateDeep: Color
     let slateMid: Color
     let gold: Color
 
     private var titleText: String {
-        isAccessibilityEnabled ? "You're all set" : "Grant permissions"
+        if !isCommandVShortcutEnabled {
+            return "Menu bar mode"
+        }
+
+        return isAccessibilityEnabled ? "You're all set" : "Grant permissions"
     }
 
     private var descriptionText: String {
+        if !isCommandVShortcutEnabled {
+            return "ClipStash will keep your clipboard history in the menu bar and leave Command V as normal paste."
+        }
+
         if isAccessibilityEnabled {
             return "Accessibility is enabled. ClipStash can now show your clipboard history when you press Command V."
         }
 
         return "Allow Accessibility so ClipStash can detect Command V and show your clipboard history."
+    }
+
+    private var isPermissionSatisfied: Bool {
+        !isCommandVShortcutEnabled || isAccessibilityEnabled
     }
 
     var body: some View {
@@ -309,49 +324,91 @@ private struct PermissionsOnboardingPage: View {
             VStack(spacing: 18) {
                 ZStack {
                     Circle()
-                        .fill((isAccessibilityEnabled ? Color(red: 72 / 255, green: 142 / 255, blue: 102 / 255) : gold).opacity(0.14))
+                        .fill((isPermissionSatisfied ? Color(red: 72 / 255, green: 142 / 255, blue: 102 / 255) : gold).opacity(0.14))
                         .frame(width: 130, height: 130)
 
-                    Image(systemName: isAccessibilityEnabled ? "checkmark.shield.fill" : "hand.raised.fill")
+                    Image(systemName: isPermissionSatisfied ? "checkmark.shield.fill" : "hand.raised.fill")
                         .font(.system(size: 48, weight: .semibold))
                         .symbolRenderingMode(.hierarchical)
-                        .foregroundStyle(isAccessibilityEnabled ? Color(red: 72 / 255, green: 142 / 255, blue: 102 / 255) : gold)
+                        .foregroundStyle(isPermissionSatisfied ? Color(red: 72 / 255, green: 142 / 255, blue: 102 / 255) : gold)
                 }
+
+                Toggle(isOn: $isCommandVShortcutEnabled) {
+                    HStack(spacing: 12) {
+                        Image(systemName: "keyboard")
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundStyle(gold)
+                            .frame(width: 24)
+
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Command V shortcut")
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundStyle(slateDeep)
+
+                            Text("Show history when you paste")
+                                .font(.system(size: 12))
+                                .foregroundStyle(slateMid)
+                                .lineLimit(1)
+                        }
+
+                        Spacer(minLength: 10)
+                    }
+                }
+                .toggleStyle(.switch)
+                .controlSize(.small)
+                .padding(.horizontal, 14)
+                .frame(width: 470, height: 54)
+                .background(
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .fill(Color(red: 247 / 255, green: 243 / 255, blue: 235 / 255).opacity(0.84))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                .strokeBorder(Color.white.opacity(0.86), lineWidth: 1)
+                        )
+                )
 
                 PermissionStatusRow(
                     title: "Accessibility",
-                    subtitle: isAccessibilityEnabled ? "Permission granted" : "Required for the Command V shortcut",
-                    isGranted: isAccessibilityEnabled,
+                    subtitle: isCommandVShortcutEnabled
+                        ? (isAccessibilityEnabled ? "Permission granted" : "Required for the Command V shortcut")
+                        : "Not needed for menu-bar mode",
+                    isGranted: !isCommandVShortcutEnabled || isAccessibilityEnabled,
                     slateDeep: slateDeep,
                     slateMid: slateMid,
                     gold: gold
                 )
                 .frame(width: 470)
 
-                Button {
-                    AccessibilityHelper.requestPermission()
-                    AccessibilityHelper.openAccessibilitySettings()
+                if isCommandVShortcutEnabled {
+                    Button {
+                        AccessibilityHelper.requestPermission()
+                        AccessibilityHelper.openAccessibilitySettings()
 
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
-                        isAccessibilityEnabled = AccessibilityHelper.isAccessibilityEnabled
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+                            isAccessibilityEnabled = AccessibilityHelper.isAccessibilityEnabled
+                        }
+                    } label: {
+                        Label(
+                            isAccessibilityEnabled ? "Permission Granted" : "Grant Permission",
+                            systemImage: isAccessibilityEnabled ? "checkmark.circle.fill" : "lock.open.fill"
+                        )
+                        .font(.system(size: 14, weight: .semibold))
+                        .frame(width: 178, height: 36)
                     }
-                } label: {
-                    Label(
-                        isAccessibilityEnabled ? "Permission Granted" : "Grant Permission",
-                        systemImage: isAccessibilityEnabled ? "checkmark.circle.fill" : "lock.open.fill"
+                    .buttonStyle(.plain)
+                    .foregroundStyle(isAccessibilityEnabled ? slateDeep : .white)
+                    .background(
+                        Capsule()
+                            .fill(isAccessibilityEnabled ? Color.white.opacity(0.82) : slateDeep)
+                            .overlay(Capsule().strokeBorder(Color.white.opacity(0.88), lineWidth: 1))
+                            .shadow(color: slateDeep.opacity(0.16), radius: 14, x: 0, y: 8)
                     )
-                    .font(.system(size: 14, weight: .semibold))
-                    .frame(width: 178, height: 36)
+                    .disabled(isAccessibilityEnabled)
+                } else {
+                    Text("You can enable Command V later from the menu bar.")
+                        .font(.system(size: 12))
+                        .foregroundStyle(slateMid)
                 }
-                .buttonStyle(.plain)
-                .foregroundStyle(isAccessibilityEnabled ? slateDeep : .white)
-                .background(
-                    Capsule()
-                        .fill(isAccessibilityEnabled ? Color.white.opacity(0.82) : slateDeep)
-                        .overlay(Capsule().strokeBorder(Color.white.opacity(0.88), lineWidth: 1))
-                        .shadow(color: slateDeep.opacity(0.16), radius: 14, x: 0, y: 8)
-                )
-                .disabled(isAccessibilityEnabled)
             }
             .padding(32)
             .background(OnboardingPanelBackground(cornerRadius: 24))
@@ -497,7 +554,7 @@ private struct HowItWorksOnboardingPage: View {
                     .font(.system(size: 31, weight: .semibold, design: .rounded))
                     .foregroundStyle(slateDeep)
 
-                Text("Use the menu bar icon, or press Command V to bring up your saved clips.")
+                Text("Use the menu bar icon, or enable Command V to bring up your saved clips.")
                     .font(.system(size: 15))
                     .foregroundStyle(slateMid)
                     .multilineTextAlignment(.center)
