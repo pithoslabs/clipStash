@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Changelog - ClipStash</title>
+    <meta name="description" content="ClipStash release history and older downloads.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&amp;family=Fraunces:wght@300;400;600&amp;display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --slate-deep: #4A5568;
+            --slate-blue: #5D6D7E;
+            --slate-mid: #85929E;
+            --slate-light: #B8C5D0;
+            --warm-gray: #E8E6E3;
+            --cream: #FDFBF7;
+            --gold: #C9A861;
+            --gold-light: #E8D5A3;
+            --mint: #D4E9E2;
+            --coral: #F5D5C8;
+            --lavender: #E4DCF0;
+            --paper-cream: #FEF9F0;
+            --font-display: 'Fraunces', serif;
+            --font-body: 'DM Sans', sans-serif;
+            --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-body);
+            background: var(--cream);
+            color: var(--slate-deep);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+            opacity: 0.025;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        .floating-papers {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .paper {
+            position: absolute;
+            border-radius: 4px;
+            opacity: 0.34;
+            animation: float 20s ease-in-out infinite;
+        }
+
+        .paper-1 {
+            width: 120px;
+            height: 160px;
+            background: linear-gradient(135deg, var(--mint), #C5E0D8);
+            top: 12%;
+            left: 8%;
+            transform: rotate(-12deg);
+        }
+
+        .paper-2 {
+            width: 100px;
+            height: 140px;
+            background: linear-gradient(135deg, var(--coral), #F0C4B5);
+            top: 58%;
+            right: 8%;
+            transform: rotate(8deg);
+            animation-delay: -5s;
+        }
+
+        .paper-3 {
+            width: 82px;
+            height: 110px;
+            background: linear-gradient(135deg, var(--lavender), #D5CBE8);
+            top: 30%;
+            right: 18%;
+            transform: rotate(-5deg);
+            animation-delay: -10s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(-8deg); }
+            50% { transform: translateY(-18px) rotate(-5deg); }
+        }
+
+        nav {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 3rem;
+        }
+
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: var(--slate-deep);
+            text-decoration: none;
+        }
+
+        .nav-logo img {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+        }
+
+        .nav-logo span {
+            font-family: var(--font-display);
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.9rem;
+        }
+
+        .nav-link {
+            color: var(--slate-mid);
+            font-size: 0.9rem;
+            font-weight: 500;
+            text-decoration: none;
+        }
+
+        .nav-link:hover {
+            color: var(--slate-deep);
+        }
+
+        .nav-download,
+        .btn-primary,
+        .btn-secondary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.55rem;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s var(--ease-out-expo);
+        }
+
+        .nav-download {
+            padding: 0.7rem 1.35rem;
+            border-radius: 100px;
+            background: var(--slate-deep);
+            color: white;
+            font-size: 0.9rem;
+        }
+
+        .nav-download:hover,
+        .btn-primary:hover {
+            background: var(--slate-blue);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(74, 85, 104, 0.22);
+        }
+
+        main {
+            position: relative;
+            z-index: 1;
+            overflow-x: hidden;
+        }
+
+        .hero {
+            max-width: 760px;
+            margin: 0 auto;
+            padding: 5.5rem 2rem 4rem;
+            text-align: center;
+        }
+
+        .hero-icon {
+            width: 92px;
+            height: 92px;
+            border-radius: 22px;
+            margin-bottom: 1.75rem;
+            box-shadow: 0 18px 50px rgba(93, 109, 126, 0.2);
+        }
+
+        .section-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--gold);
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+        }
+
+        .section-label::before,
+        .section-label::after {
+            content: '';
+            width: 24px;
+            height: 1px;
+            background: var(--gold);
+        }
+
+        h1 {
+            font-family: var(--font-display);
+            font-size: clamp(2.5rem, 8vw, 4.5rem);
+            font-weight: 300;
+            line-height: 1.05;
+            margin-bottom: 1.25rem;
+            overflow-wrap: break-word;
+        }
+
+        h1 em,
+        h2 em {
+            color: var(--slate-blue);
+            font-style: italic;
+            font-weight: 400;
+        }
+
+        .hero p {
+            color: var(--slate-mid);
+            font-size: 1.12rem;
+            margin: 0 auto 2rem;
+            max-width: 560px;
+        }
+
+        .hero-actions,
+        .release-actions {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+        }
+
+        .btn-primary {
+            min-height: 48px;
+            padding: 0.9rem 1.65rem;
+            border-radius: 100px;
+            background: var(--slate-deep);
+            color: white;
+            box-shadow: 0 4px 20px rgba(74, 85, 104, 0.18);
+        }
+
+        .btn-secondary {
+            min-height: 44px;
+            padding: 0.8rem 1.35rem;
+            border-radius: 100px;
+            background: white;
+            color: var(--slate-deep);
+            box-shadow: 0 2px 12px rgba(93, 109, 126, 0.1);
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(93, 109, 126, 0.15);
+        }
+
+        .release-section {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 2rem 6rem;
+        }
+
+        .release-card {
+            position: relative;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 1.75rem;
+            padding: 2rem;
+            margin-bottom: 1.25rem;
+            background: rgba(255, 255, 255, 0.78);
+            border: 1px solid rgba(93, 109, 126, 0.1);
+            border-radius: 20px;
+            box-shadow: 0 2px 24px rgba(93, 109, 126, 0.07);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+        }
+
+        .release-card > div {
+            min-width: 0;
+        }
+
+        .release-meta {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.6rem;
+            margin-bottom: 0.65rem;
+        }
+
+        .version {
+            font-family: var(--font-display);
+            font-size: 1.8rem;
+            font-weight: 400;
+            color: var(--slate-deep);
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            min-height: 24px;
+            padding: 0 0.65rem;
+            border-radius: 100px;
+            background: var(--gold-light);
+            color: var(--slate-deep);
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .date {
+            color: var(--slate-mid);
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+
+        .release-card h2 {
+            font-family: var(--font-display);
+            font-size: 1.45rem;
+            font-weight: 400;
+            margin-bottom: 0.9rem;
+        }
+
+        .release-card ul {
+            padding-left: 1.1rem;
+            color: var(--slate-deep);
+            overflow-wrap: break-word;
+        }
+
+        .release-card li {
+            margin-bottom: 0.42rem;
+        }
+
+        .download-panel {
+            min-width: 230px;
+            align-self: start;
+            padding: 1rem;
+            background: var(--paper-cream);
+            border: 1px solid rgba(93, 109, 126, 0.08);
+            border-radius: 16px;
+        }
+
+        .download-panel strong {
+            display: block;
+            margin-bottom: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .download-panel span {
+            display: block;
+            color: var(--slate-mid);
+            font-size: 0.78rem;
+            margin-bottom: 0.85rem;
+            word-break: break-word;
+        }
+
+        .download-panel .btn-secondary {
+            width: 100%;
+            min-height: 40px;
+            padding: 0.7rem 1rem;
+            font-size: 0.9rem;
+        }
+
+        .release-note {
+            padding: 1.25rem 1.5rem;
+            margin-top: 1.5rem;
+            color: var(--slate-mid);
+            background: rgba(212, 233, 226, 0.45);
+            border-radius: 16px;
+        }
+
+        footer {
+            position: relative;
+            z-index: 1;
+            padding: 3rem 2rem;
+            text-align: center;
+            border-top: 1px solid rgba(93, 109, 126, 0.1);
+        }
+
+        footer p {
+            color: var(--slate-mid);
+            font-size: 0.9rem;
+        }
+
+        footer a {
+            color: var(--slate-blue);
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 760px) {
+            nav {
+                padding: 1rem 1.25rem;
+            }
+
+            .nav-logo span {
+                display: none;
+            }
+
+            .nav-actions {
+                gap: 0.65rem;
+            }
+
+            .nav-download {
+                padding: 0.65rem 1rem;
+            }
+
+            .release-card {
+                grid-template-columns: 1fr;
+                padding: 1.35rem;
+            }
+
+            .download-panel {
+                min-width: 0;
+            }
+        }
+
+        @media (max-width: 520px) {
+            .nav-link {
+                display: none;
+            }
+
+            nav {
+                width: min(390px, 100%);
+                max-width: 390px;
+                margin-left: 0;
+                margin-right: 0;
+                overflow: hidden;
+            }
+
+            .hero,
+            .release-section {
+                width: min(390px, 100%);
+                max-width: 390px;
+                margin-left: 0;
+                margin-right: 0;
+            }
+
+            .hero {
+                padding-top: 3.5rem;
+            }
+
+            .hero p {
+                max-width: 326px;
+            }
+
+            .hero-actions {
+                width: min(326px, 100%);
+                max-width: 326px;
+                margin-left: auto;
+                margin-right: auto;
+            }
+
+            .release-section {
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+
+            .release-card {
+                width: 100%;
+            }
+
+            h1 {
+                font-size: 2.35rem;
+                line-height: 1.08;
+            }
+
+            h1 span,
+            h1 em {
+                display: block;
+            }
+
+            .hero-actions,
+            .release-actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .btn-primary,
+            .btn-secondary {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-papers" aria-hidden="true">
+        <div class="paper paper-1"></div>
+        <div class="paper paper-2"></div>
+        <div class="paper paper-3"></div>
+    </div>
+
+    <nav>
+        <a href="index.html" class="nav-logo">
+            <img src="icon.png" alt="ClipStash">
+            <span>ClipStash</span>
+        </a>
+        <div class="nav-actions">
+            <a href="index.html" class="nav-link">Home</a>
+            <a href="privacy.html" class="nav-link">Privacy</a>
+            <a href="/download" class="nav-download" download>Download</a>
+        </div>
+    </nav>
+
+    <main>
+        <section class="hero">
+            <img src="icon.png" alt="ClipStash" class="hero-icon">
+            <div class="section-label">Release History</div>
+            <h1><span>ClipStash</span> <em>changelog.</em></h1>
+            <p>Download the latest build, review what changed, or grab an older installer when you need to stay on a previous version.</p>
+            <div class="hero-actions">
+                <a href="/download" class="btn-primary" download>Download Latest</a>
+                <a href="https://github.com/pithoslabs/clipStash/releases" class="btn-secondary" target="_blank" rel="noopener noreferrer">All GitHub Releases</a>
+            </div>
+        </section>
+
+        <section class="release-section" aria-label="ClipStash releases">
+            <article class="release-card">
+                <div>
+                    <div class="release-meta">
+                        <div class="version">v2.1.0</div>
+                        <span class="badge">Current</span>
+                    </div>
+                    <p class="date">Released May 20, 2026</p>
+                    <h2>Direct download build</h2>
+                    <ul>
+                        <li>Published the current direct download build for ClipStash 2.1.</li>
+                        <li>Updated the website download route to point users at the latest hosted release asset.</li>
+                        <li>Kept local-first clipboard history, encrypted storage, search, keyboard navigation, and menu bar access.</li>
+                    </ul>
+                </div>
+                <aside class="download-panel" aria-label="v2.1.0 download">
+                    <strong>Release file</strong>
+                    <span>ClipStash-v2.1.0.zip</span>
+                    <a href="https://github.com/pithoslabs/clipStash/releases/download/v2.1.0/ClipStash-v2.1.0.zip" class="btn-secondary" download>Download v2.1.0</a>
+                </aside>
+            </article>
+
+            <article class="release-card">
+                <div>
+                    <div class="release-meta">
+                        <div class="version">v1.0.0</div>
+                        <span class="badge">DMG</span>
+                    </div>
+                    <p class="date">Released May 4, 2026</p>
+                    <h2>Initial public release</h2>
+                    <ul>
+                        <li>Added clipboard history from the menu bar.</li>
+                        <li>Added the Command V clipboard history popup with keyboard navigation and quick paste.</li>
+                        <li>Added search across recent clipboard items, source app tracking, duplicate prevention, and 24-hour cleanup.</li>
+                        <li>Stored clipboard history locally with encrypted persistence and no app telemetry.</li>
+                        <li>Added remote desktop paste opt-in and hover states across menu and popup history items.</li>
+                    </ul>
+                </div>
+                <aside class="download-panel" aria-label="v1.0.0 download">
+                    <strong>Older DMG</strong>
+                    <span>ClipStash.dmg</span>
+                    <a href="https://github.com/pithoslabs/clipStash/releases/download/v1.0.0/ClipStash.dmg" class="btn-secondary" download>Download v1.0.0 DMG</a>
+                </aside>
+            </article>
+
+            <p class="release-note">Older builds are provided for compatibility and rollback needs. For normal use, install the latest version from the main download button.</p>
+        </section>
+    </main>
+
+    <footer>
+        <p><a href="index.html">Home</a> <span>|</span> <a href="privacy.html">Privacy Policy</a> <span>|</span> Contact: <a href="mailto:info@pithoslabs.org">info@pithoslabs.org</a></p>
+    </footer>
+</body>
+</html>
