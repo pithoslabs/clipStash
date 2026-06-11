@@ -5,6 +5,10 @@
       "destination": "/api/download"
     },
     {
+      "source": "/download/",
+      "destination": "/api/download"
+    },
+    {
       "source": "/ClipStash.zip",
       "destination": "/api/download"
     },
