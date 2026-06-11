@@ -3,16 +3,44 @@ import Carbon.HIToolbox
 
 final class HotkeyManager {
     nonisolated(unsafe) static let shared = HotkeyManager()
+    static let commandVShortcutEnabledKey = "commandVShortcutEnabled"
     static let enableRemoteDesktopPasteKey = "enableRemoteDesktopPaste"
 
     private var eventTap: CFMachPort?
     private var runLoopSource: CFRunLoopSource?
 
     var onPasteTriggered: (() -> Void)?
+    var isRunning: Bool {
+        eventTap != nil
+    }
 
     private init() {}
 
+    static func registerDefaults() {
+        UserDefaults.standard.register(defaults: [
+            commandVShortcutEnabledKey: true,
+            enableRemoteDesktopPasteKey: false
+        ])
+    }
+
+    static var isCommandVShortcutEnabled: Bool {
+        if UserDefaults.standard.object(forKey: commandVShortcutEnabledKey) == nil {
+            return true
+        }
+
+        return UserDefaults.standard.bool(forKey: commandVShortcutEnabledKey)
+    }
+
     func start() -> Bool {
+        guard Self.isCommandVShortcutEnabled else {
+            stop()
+            return true
+        }
+
+        guard eventTap == nil else {
+            return true
+        }
+
         guard checkAccessibilityPermission() else {
             requestAccessibilityPermission()
             return false
