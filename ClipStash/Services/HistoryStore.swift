@@ -43,25 +43,34 @@ final class HistoryStore: ObservableObject {
         startCleanupTimer()
     }
 
-    func add(_ content: String, sourceApp: String? = nil) {
+    func add(
+        _ content: String,
+        sourceApp: String? = nil,
+        representations: [ClipboardRepresentation] = []
+    ) {
         let trimmed = content.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
 
         // Don't add duplicates of the most recent item
-        if let last = items.first, last.content == trimmed {
+        if let last = items.first,
+           last.content == trimmed,
+           last.representations == representations {
             return
         }
+
+        let existingItem = items.first { $0.content == trimmed }
 
         // Remove any existing item with same content
         items.removeAll { $0.content == trimmed }
 
-        let item = ClipboardItem(content: trimmed, sourceApp: sourceApp)
-        items.insert(item, at: 0)
-
-        // Enforce max items
-        if items.count > maxItems {
-            items = Array(items.prefix(maxItems))
-        }
+        let item = ClipboardItem(
+            content: trimmed,
+            sourceApp: sourceApp,
+            isStarred: existingItem?.isStarred ?? false,
+            representations: representations
+        )
+        items.append(item)
+        sortAndTrimItems()
 
         updateHasItems()
         save()
@@ -76,6 +85,14 @@ final class HistoryStore: ObservableObject {
     func clear() {
         items.removeAll()
         updateHasItems()
+        save()
+    }
+
+    func toggleStarred(_ item: ClipboardItem) {
+        guard let index = items.firstIndex(where: { $0.id == item.id }) else { return }
+
+        items[index] = items[index].withStarred(!items[index].isStarred)
+        sortAndTrimItems()
         save()
     }
 
@@ -138,9 +155,24 @@ final class HistoryStore: ObservableObject {
             let encryptedData = try Data(contentsOf: storageURL)
             let jsonData = try EncryptionHelper.decrypt(encryptedData)
             items = try JSONDecoder().decode([ClipboardItem].self, from: jsonData)
+            sortAndTrimItems()
             updateHasItems()
         } catch {
             saveError = error
+        }
+    }
+
+    private func sortAndTrimItems() {
+        items.sort { first, second in
+            if first.isStarred != second.isStarred {
+                return first.isStarred && !second.isStarred
+            }
+
+            return first.copiedAt > second.copiedAt
+        }
+
+        if items.count > maxItems {
+            items = Array(items.prefix(maxItems))
         }
     }
 

@@ -14,6 +14,7 @@ final class ClipboardItemTests: XCTestCase {
         XCTAssertEqual(item.sourceApp, sourceApp)
         XCTAssertNotNil(item.id)
         XCTAssertNotNil(item.copiedAt)
+        XCTAssertFalse(item.isStarred)
     }
 
     func testInitializationWithoutSourceApp() {
@@ -104,7 +105,16 @@ final class ClipboardItemTests: XCTestCase {
     // MARK: - Codable Tests
 
     func testEncodeDecode() throws {
-        let original = ClipboardItem(content: "Test content", sourceApp: "Safari")
+        let representation = ClipboardRepresentation(
+            type: "public.rtf",
+            data: try XCTUnwrap("{\\rtf1 Test content}".data(using: .utf8))
+        )
+        let original = ClipboardItem(
+            content: "Test content",
+            sourceApp: "Safari",
+            isStarred: true,
+            representations: [representation]
+        )
 
         let encoder = JSONEncoder()
         let data = try encoder.encode(original)
@@ -115,6 +125,46 @@ final class ClipboardItemTests: XCTestCase {
         XCTAssertEqual(decoded.id, original.id)
         XCTAssertEqual(decoded.content, original.content)
         XCTAssertEqual(decoded.sourceApp, original.sourceApp)
+        XCTAssertTrue(decoded.isStarred)
+        XCTAssertEqual(decoded.representations, [representation])
+    }
+
+    func testDecodeLegacyItemDefaultsToUnstarred() throws {
+        let json = """
+        {
+            "id": "00000000-0000-0000-0000-000000000001",
+            "content": "Legacy content",
+            "copiedAt": 0,
+            "sourceApp": "Safari"
+        }
+        """
+
+        let data = try XCTUnwrap(json.data(using: .utf8))
+        let decoded = try JSONDecoder().decode(ClipboardItem.self, from: data)
+
+        XCTAssertEqual(decoded.content, "Legacy content")
+        XCTAssertFalse(decoded.isStarred)
+        XCTAssertTrue(decoded.representations.isEmpty)
+    }
+
+    func testWithStarredPreservesItemData() throws {
+        let representation = ClipboardRepresentation(
+            type: "public.html",
+            data: try XCTUnwrap("<strong>Test content</strong>".data(using: .utf8))
+        )
+        let original = ClipboardItem(
+            content: "Test content",
+            sourceApp: "Safari",
+            representations: [representation]
+        )
+        let starred = original.withStarred(true)
+
+        XCTAssertEqual(starred.id, original.id)
+        XCTAssertEqual(starred.content, original.content)
+        XCTAssertEqual(starred.copiedAt, original.copiedAt)
+        XCTAssertEqual(starred.sourceApp, original.sourceApp)
+        XCTAssertEqual(starred.representations, [representation])
+        XCTAssertTrue(starred.isStarred)
     }
 
     // MARK: - Equatable Tests

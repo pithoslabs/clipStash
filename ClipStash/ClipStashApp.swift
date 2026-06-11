@@ -19,7 +19,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let maxPermissionPolls = 300  // Stop polling after 5 minutes (300 * 1 second)
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        setupApp()
+        HotkeyManager.registerDefaults()
+
+        if OnboardingWindowController.shared.shouldShow {
+            OnboardingWindowController.shared.onFinish = { [weak self] in
+                self?.setupApp()
+            }
+            OnboardingWindowController.shared.show()
+        } else {
+            setupApp()
+        }
     }
 
     private func setupApp() {
@@ -38,14 +47,27 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
         }
 
-        // Start hotkey listening
-        if !HotkeyManager.shared.start() {
-            // Accessibility permission not granted, will be prompted
-            startPermissionPolling()
+        reconcileHotkeyPreference()
+    }
+
+    func reconcileHotkeyPreference() {
+        if HotkeyManager.isCommandVShortcutEnabled {
+            if HotkeyManager.shared.start() {
+                stopPermissionPolling()
+            } else {
+                // Accessibility permission not granted, will be prompted
+                startPermissionPolling()
+            }
+        } else {
+            stopPermissionPolling()
+            HotkeyManager.shared.stop()
+            PopupWindowController.shared.dismiss()
         }
     }
 
     private func startPermissionPolling() {
+        guard permissionTimer == nil else { return }
+
         permissionPollCount = 0
         permissionTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] timer in
             guard let self = self else {
@@ -54,6 +76,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
 
             self.permissionPollCount += 1
+
+            guard HotkeyManager.isCommandVShortcutEnabled else {
+                self.stopPermissionPolling()
+                return
+            }
 
             if HotkeyManager.shared.checkAccessibilityPermission() {
                 self.stopPermissionPolling()

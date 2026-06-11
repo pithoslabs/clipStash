@@ -70,6 +70,38 @@ final class HistoryStoreTests: XCTestCase {
         XCTAssertEqual(store.items[1].content, "Second")
     }
 
+    func testAddPreservesStarredStateForDuplicateContent() {
+        store.add("First")
+        let first = store.items[0]
+        store.toggleStarred(first)
+
+        store.add("Second")
+        store.add("First")
+
+        XCTAssertEqual(store.items.count, 2)
+        XCTAssertEqual(store.items[0].content, "First")
+        XCTAssertTrue(store.items[0].isStarred)
+    }
+
+    func testAddUpdatesRepresentationsForDuplicateContent() throws {
+        let plain = ClipboardRepresentation(
+            type: "public.utf8-plain-text",
+            data: try XCTUnwrap("First".data(using: .utf8))
+        )
+        let rich = ClipboardRepresentation(
+            type: "public.rtf",
+            data: try XCTUnwrap("{\\rtf1 First}".data(using: .utf8))
+        )
+
+        store.add("First", representations: [plain])
+        store.toggleStarred(store.items[0])
+        store.add("First", representations: [rich])
+
+        XCTAssertEqual(store.items.count, 1)
+        XCTAssertEqual(store.items[0].representations, [rich])
+        XCTAssertTrue(store.items[0].isStarred)
+    }
+
     func testAddEnforcesMaxItems() {
         // Add more than max (15) items
         for i in 1...20 {
@@ -154,6 +186,58 @@ final class HistoryStoreTests: XCTestCase {
         let results = store.search("xyz")
 
         XCTAssertTrue(results.isEmpty)
+    }
+
+    // MARK: - Star Tests
+
+    func testToggleStarredMovesItemToTop() {
+        store.add("First")
+        store.add("Second")
+        store.add("Third")
+
+        let first = store.items.first { $0.content == "First" }!
+        store.toggleStarred(first)
+
+        XCTAssertEqual(store.items[0].content, "First")
+        XCTAssertTrue(store.items[0].isStarred)
+        XCTAssertEqual(store.items[1].content, "Third")
+        XCTAssertEqual(store.items[2].content, "Second")
+    }
+
+    func testUnstarredItemReturnsToRecencyOrder() {
+        store.add("First")
+        Thread.sleep(forTimeInterval: 0.01)
+        store.add("Second")
+
+        let first = store.items.first { $0.content == "First" }!
+        store.toggleStarred(first)
+        store.toggleStarred(store.items[0])
+
+        XCTAssertEqual(store.items[0].content, "Second")
+        XCTAssertFalse(store.items[1].isStarred)
+    }
+
+    func testNewItemsStayBelowStarredItems() {
+        store.add("First")
+        store.toggleStarred(store.items[0])
+
+        store.add("Second")
+
+        XCTAssertEqual(store.items[0].content, "First")
+        XCTAssertTrue(store.items[0].isStarred)
+        XCTAssertEqual(store.items[1].content, "Second")
+    }
+
+    func testSearchKeepsStarredItemsFirst() {
+        store.add("Alpha one")
+        store.add("Alpha two")
+
+        let first = store.items.first { $0.content == "Alpha one" }!
+        store.toggleStarred(first)
+
+        let results = store.search("Alpha")
+
+        XCTAssertEqual(results.map(\.content), ["Alpha one", "Alpha two"])
     }
 
     // MARK: - Persistence Tests

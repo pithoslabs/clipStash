@@ -19,7 +19,6 @@ final class PopupWindowController {
     private var popupView: PopupView?
     private var hostingView: NSHostingView<PopupView>?
     private var eventMonitor: Any?
-    private var mouseMonitor: Any?
     private var globalClickMonitor: Any?
     private var previousApp: NSRunningApplication?
     private var activationObserver: Any?
@@ -58,10 +57,12 @@ final class PopupWindowController {
         popupView = view
 
         let hostingView = FirstMouseHostingView(rootView: view)
+        hostingView.wantsLayer = true
+        hostingView.layer?.backgroundColor = NSColor.clear.cgColor
         self.hostingView = hostingView
 
         let window = KeyableWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 400, height: 350),
+            contentRect: NSRect(x: 0, y: 0, width: 420, height: 350),
             styleMask: [.borderless],
             backing: .buffered,
             defer: false
@@ -71,7 +72,7 @@ final class PopupWindowController {
         window.isOpaque = false
         window.backgroundColor = .clear
         window.level = .floating
-        window.hasShadow = true
+        window.hasShadow = false
         window.isMovableByWindowBackground = false
 
         // Center on screen containing mouse cursor (or main screen as fallback)
@@ -97,14 +98,6 @@ final class PopupWindowController {
             return event
         }
 
-        // Monitor for mouse clicks on items
-        mouseMonitor = NSEvent.addLocalMonitorForEvents(matching: .leftMouseDown) { [weak self] event in
-            if self?.popupView?.handleMouseDown(event) == true {
-                return nil
-            }
-            return event
-        }
-
         // Monitor for clicks outside
         globalClickMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] _ in
             self?.dismiss()
@@ -115,11 +108,6 @@ final class PopupWindowController {
         if let monitor = eventMonitor {
             NSEvent.removeMonitor(monitor)
             eventMonitor = nil
-        }
-
-        if let monitor = mouseMonitor {
-            NSEvent.removeMonitor(monitor)
-            mouseMonitor = nil
         }
 
         if let monitor = globalClickMonitor {
@@ -135,7 +123,7 @@ final class PopupWindowController {
 
     private func handleItemSelected(_ item: ClipboardItem) {
         // Always set clipboard content first
-        ClipboardMonitor.shared.setContent(item.content)
+        ClipboardMonitor.shared.setContent(item)
 
         // Dismiss popup
         dismiss()

@@ -2,11 +2,11 @@
 
 # ClipStash
 
-ClipStash is a native macOS clipboard history manager. Press `Cmd+V` to open your recent clipboard items, search or navigate with the keyboard, and paste the selected item into the app you were using.
+ClipStash is a native macOS clipboard history manager. Use the menu bar clipboard history, or enable the optional `Cmd+V` shortcut to open recent clipboard items, search or navigate with the keyboard, and paste the selected item into the app you were using.
 
 ## Features
 
-- `Cmd+V` clipboard history popup
+- Optional `Cmd+V` clipboard history popup
 - Keyboard navigation with arrows, `Enter`, and `Cmd+1` through `Cmd+9`
 - Search and filtering across recent clipboard text
 - Source app tracking
@@ -26,7 +26,7 @@ ClipStash is designed to keep clipboard data on your Mac.
 
 ## Permissions
 
-ClipStash requires macOS Accessibility permission to intercept `Cmd+V` and simulate paste after you select an item. Without Accessibility permission, the global paste shortcut integration cannot run.
+ClipStash requires macOS Accessibility permission only when the `Cmd+V` shortcut is enabled. Without Accessibility permission, the menu bar clipboard history still works, but the global paste shortcut integration cannot run.
 
 ## Requirements
 
@@ -39,7 +39,7 @@ ClipStash requires macOS Accessibility permission to intercept `Cmd+V` and simul
 2. Open `ClipStash.xcodeproj` in Xcode.
 3. Select the `ClipStash` scheme.
 4. Build and run the app.
-5. Grant Accessibility permission when macOS prompts you.
+5. Grant Accessibility permission if you want to use the `Cmd+V` shortcut.
 
 You can also build from the command line:
 
